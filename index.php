@@ -331,7 +331,7 @@ $destinations = $conn->query($query);
         // Initialize Leaflet Map (FREE!)
         function initMap() {
             // Center on Cebu City
-            map = L.map('map').setView([10.3157, 123.8854], 12);
+            map = L.map('map').setView([11.0059, 124.6075], 13);
             
             // Add OpenStreetMap tiles (FREE!)
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -403,7 +403,6 @@ $destinations = $conn->query($query);
                 // Simple fare calculation (base PHP 40 + PHP 10 per km)
                 const baseFare = 0;
                 const farePerKm = 10;
-                const estimatedFare = baseFare + (distance * farePerKm);
                 
                 document.getElementById('distance').textContent = distance + ' km';
                 document.getElementById('duration').textContent = duration + ' minutes';
