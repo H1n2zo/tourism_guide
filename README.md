@@ -32,4 +32,8 @@
    - Navigate to the users table
    - Edit your user record
    - Change the role from "user" to "admin"
+<<<<<<< HEAD
    - Save changes
+=======
+   - Save changes
+>>>>>>> 63e15e215d7bf8e17fefb4a98d0df2b4201b9fc9
