@@ -104,6 +104,12 @@ $categories = $conn->query("SELECT * FROM categories ORDER BY name");
             <a class="nav-link" href="routes.php">
                 <i class="fas fa-route"></i> Routes
             </a>
+            <a class="nav-link active" href="reviews.php">
+                <i class="fas fa-star"></i> Reviews & Feedback
+                <?php if ($unread_feedback > 0): ?>
+                    <span class="badge bg-danger"><?php echo $unread_feedback; ?></span>
+                <?php endif; ?>
+            </a>
             <a class="nav-link" href="users.php">
                 <i class="fas fa-users"></i> Users
             </a>
