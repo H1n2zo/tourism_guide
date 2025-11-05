@@ -222,13 +222,13 @@ $recent_destinations = $conn->query("SELECT d.*, c.name as category_name
                         <h5 class="mb-0"><i class="fas fa-bolt"></i> Quick Actions</h5>
                     </div>
                     <div class="card-body">
-                        <a href="add_destination.php" class="btn btn-primary me-2">
+                        <a href="destinations.php" class="btn btn-primary me-2">
                             <i class="fas fa-plus"></i> Add Destination
                         </a>
-                        <a href="add_category.php" class="btn btn-success me-2">
+                        <a href="categories.php" class="btn btn-success me-2">
                             <i class="fas fa-plus"></i> Add Category
                         </a>
-                        <a href="add_route.php" class="btn btn-info me-2">
+                        <a href="routes.php" class="btn btn-info me-2">
                             <i class="fas fa-plus"></i> Add Route
                         </a>
                         <a href="destinations.php" class="btn btn-warning">
