@@ -59,8 +59,11 @@ $icon_options = [
     'fa-water' => 'Beach',
     'fa-mountain' => 'Mountain',
     'fa-coffee' => 'Cafe',
-    'fa-music' => 'Music'
+    'fa-music' => 'Music',
+    'fa-palette' => 'Art',
+    'fa-heart' => 'Favorite'
 ];
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
