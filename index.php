@@ -404,13 +404,13 @@ $destinations = $conn->query($query);
                 const duration = Math.round(summary.totalTime / 60);
                 
                 // Simple fare calculation (base PHP 40 + PHP 10 per km)
-                const baseFare = 40;
-                const farePerKm = 10;
+                const baseFare = 10;
+                const farePerKm = 1;
                 const estimatedFare = baseFare + (distance * farePerKm);
                 
                 document.getElementById('distance').textContent = distance + ' km';
                 document.getElementById('duration').textContent = duration + ' minutes';
-                document.getElementById('fare').textContent = 'PHP ' + estimatedFare.toFixed(2) + ' (Jeepney/Bus estimate)';
+                document.getElementById('fare').textContent = 'PHP ' + estimatedFare.toFixed(2) + ' (Transport estimate)';
                 document.getElementById('routeInfo').style.display = 'block';
             }).addTo(map);
         }
