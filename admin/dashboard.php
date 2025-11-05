@@ -240,9 +240,6 @@ $recent_destinations = $conn->query("SELECT d.*, c.name as category_name
                         <a href="destinations.php" class="btn btn-warning">
                             <i class="fas fa-cog"></i> Manage Destinations
                         </a>
-                        <a href="reviews.php" class="btn btn-warning">
-                            <i class=""></i> Manage Reviews
-                        </a>
                     </div>
                 </div>
             </div>
