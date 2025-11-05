@@ -85,10 +85,6 @@ CREATE TABLE IF NOT EXISTS reviews (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
--- Insert default admin user (password: admin123)
-INSERT INTO users (username, password, email, role) VALUES 
-('admin', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin@tourismguide.com', 'admin');
-
 -- Insert default categories
 INSERT INTO categories (name, icon) VALUES 
 ('Tourist Spot', 'fa-camera'),
