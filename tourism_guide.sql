@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 05, 2025 at 07:19 AM
+-- Generation Time: Nov 05, 2025 at 07:55 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -102,7 +102,8 @@ INSERT INTO `destinations` (`id`, `name`, `category_id`, `description`, `address
 (46, 'Ormoc Villa Hotel', 6, 'Mid-range hotel with modern facilities, swimming pool, restaurant, and conference rooms. Family-friendly with spacious rooms.', 'Aviles Street, Ormoc City, Leyte', 11.00810000, 124.60910000, '+63-053-561-9234', 'reservations@ormocvillahotel.com', NULL, NULL, NULL, 4.2, NULL, 1, '2025-11-05 06:08:54', '2025-11-05 06:08:54'),
 (47, 'Robinsons Place Ormoc', 7, 'Major shopping mall featuring department store, supermarket, cinema, restaurants, and retail shops. Air-conditioned and family-friendly.', 'Real Street, Ormoc City, Leyte', 11.00410000, 124.60630000, '+63-053-561-9345', NULL, NULL, '10:00 AM - 9:00 PM', NULL, 4.3, NULL, 1, '2025-11-05 06:09:08', '2025-11-05 06:09:08'),
 (48, 'Super Ormoc', 7, 'Popular shopping center with grocery, department store, food court, and various retail outlets. Long-standing Ormoc landmark.', 'Bonifacio Street, Ormoc City, Leyte', 11.00740000, 124.60850000, '+63-053-561-9456', NULL, NULL, '9:00 AM - 8:00 PM', NULL, 4.1, NULL, 1, '2025-11-05 06:09:08', '2025-11-05 06:09:08'),
-(49, 'Ormoc Pasalubong Center', 7, 'One-stop shop for local products and souvenirs. Features Ormoc delicacies, handicrafts, and regional specialties. Perfect for gifts.', 'Rizal Avenue, Ormoc City, Leyte', 11.00650000, 124.60770000, '+63-917-789-0123', NULL, NULL, '8:00 AM - 7:00 PM', NULL, 4.2, NULL, 1, '2025-11-05 06:09:08', '2025-11-05 06:09:08');
+(49, 'Ormoc Pasalubong Center', 7, 'One-stop shop for local products and souvenirs. Features Ormoc delicacies, handicrafts, and regional specialties. Perfect for gifts.', 'Rizal Avenue, Ormoc City, Leyte', 11.00650000, 124.60770000, '+63-917-789-0123', NULL, NULL, '8:00 AM - 7:00 PM', NULL, 4.2, NULL, 1, '2025-11-05 06:09:08', '2025-11-05 06:09:08'),
+(50, 'Ormoc City Terminal', 4, '', '', 11.00476371, 124.60709824, '', '', '', '', '', 0.0, '', 1, '2025-11-05 06:37:04', '2025-11-05 06:37:04');
 
 -- --------------------------------------------------------
 
@@ -122,6 +123,24 @@ CREATE TABLE `destination_images` (
 -- --------------------------------------------------------
 
 --
+-- Stand-in structure for view `destination_ratings`
+-- (See below for the actual view)
+--
+CREATE TABLE `destination_ratings` (
+`id` int(11)
+,`name` varchar(200)
+,`review_count` bigint(21)
+,`average_rating` decimal(12,1)
+,`five_star` decimal(22,0)
+,`four_star` decimal(22,0)
+,`three_star` decimal(22,0)
+,`two_star` decimal(22,0)
+,`one_star` decimal(22,0)
+);
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `reviews`
 --
 
@@ -129,8 +148,10 @@ CREATE TABLE `reviews` (
   `id` int(11) NOT NULL,
   `destination_id` int(11) NOT NULL,
   `user_id` int(11) DEFAULT NULL,
-  `rating` int(11) DEFAULT NULL CHECK (`rating` >= 1 and `rating` <= 5),
+  `user_name` varchar(100) DEFAULT NULL,
+  `rating` int(11) NOT NULL CHECK (`rating` >= 1 and `rating` <= 5),
   `comment` text DEFAULT NULL,
+  `is_approved` tinyint(1) DEFAULT 1,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -160,7 +181,7 @@ CREATE TABLE `routes` (
 --
 
 INSERT INTO `routes` (`id`, `route_name`, `origin_id`, `destination_id`, `transport_mode`, `distance_km`, `estimated_time_minutes`, `base_fare`, `fare_per_km`, `description`, `is_active`, `created_at`) VALUES
-(26, 'Ormoc City Plaza to Lake Danao Natural Park', 37, 8, 'van', 18.50, 45, 50.00, 5.00, 'Scenic route through mountain roads. Van services available from city terminal.', 1, '2025-11-05 06:19:01'),
+(26, 'Ormoc City Terminal to Lake Danao Natural Park', 50, 8, 'van', 0.00, 0, 30.00, 0.00, '0', 1, '2025-11-05 06:19:01'),
 (27, 'Ormoc City Plaza to Tongonan Hot Spring', 37, 9, 'jeepney', 15.20, 40, 30.00, 4.00, 'Regular jeepney route via Tongonan Highway. Air-conditioned vans also available.', 1, '2025-11-05 06:19:01'),
 (28, 'Ormoc Port (near Plaza) to Kasabangan Island', 37, 10, '', 8.50, 30, 100.00, 0.00, 'Boat ride from Ormoc port. Schedule subject to weather conditions.', 1, '2025-11-05 06:19:01'),
 (29, 'Ormoc City Plaza to Altos Peak', 37, 11, 'tricycle', 19.00, 60, 40.00, 6.00, 'Tricycle or habal-habal to Lake Danao area then trek. Best with guide.', 1, '2025-11-05 06:19:01'),
@@ -192,6 +213,41 @@ INSERT INTO `users` (`id`, `username`, `password`, `email`, `role`, `created_at`
 (1, 'Admin', '$2y$10$rurfn/OYFQUWIfpyzXxOjOmErlcq/Mw0yVEGD8cTsMAHwpI/yXQGa', 'admin@gmail.com', 'admin', '2025-11-05 00:41:27'),
 (2, 'Hans', '$2y$10$/ADtH0gaUpSr8ox4ihu2vOcwwsZWwLg8I5vNh6JJmlJSGzgTpd7x6', 'hansmichael.2005.gabor@gmail.com', 'user', '2025-11-05 00:31:38');
 
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `website_feedback`
+--
+
+CREATE TABLE `website_feedback` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) DEFAULT NULL,
+  `user_name` varchar(100) DEFAULT NULL,
+  `email` varchar(100) DEFAULT NULL,
+  `rating` int(11) NOT NULL CHECK (`rating` >= 1 and `rating` <= 5),
+  `category` enum('usability','features','content','design','general') DEFAULT 'general',
+  `feedback` text NOT NULL,
+  `is_public` tinyint(1) DEFAULT 1,
+  `is_read` tinyint(1) DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `website_feedback`
+--
+
+INSERT INTO `website_feedback` (`id`, `user_id`, `user_name`, `email`, `rating`, `category`, `feedback`, `is_public`, `is_read`, `created_at`) VALUES
+(1, 1, 'Admin', 'ad@gmail.com', 2, 'features', 'damn', 1, 0, '2025-11-05 06:50:43');
+
+-- --------------------------------------------------------
+
+--
+-- Structure for view `destination_ratings`
+--
+DROP TABLE IF EXISTS `destination_ratings`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `destination_ratings`  AS SELECT `d`.`id` AS `id`, `d`.`name` AS `name`, count(`r`.`id`) AS `review_count`, round(avg(`r`.`rating`),1) AS `average_rating`, sum(case when `r`.`rating` = 5 then 1 else 0 end) AS `five_star`, sum(case when `r`.`rating` = 4 then 1 else 0 end) AS `four_star`, sum(case when `r`.`rating` = 3 then 1 else 0 end) AS `three_star`, sum(case when `r`.`rating` = 2 then 1 else 0 end) AS `two_star`, sum(case when `r`.`rating` = 1 then 1 else 0 end) AS `one_star` FROM (`destinations` `d` left join `reviews` `r` on(`d`.`id` = `r`.`destination_id` and `r`.`is_approved` = 1)) GROUP BY `d`.`id`, `d`.`name` ;
+
 --
 -- Indexes for dumped tables
 --
@@ -221,8 +277,9 @@ ALTER TABLE `destination_images`
 --
 ALTER TABLE `reviews`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `destination_id` (`destination_id`),
-  ADD KEY `user_id` (`user_id`);
+  ADD KEY `user_id` (`user_id`),
+  ADD KEY `idx_reviews_destination` (`destination_id`),
+  ADD KEY `idx_reviews_rating` (`rating`);
 
 --
 -- Indexes for table `routes`
@@ -240,6 +297,15 @@ ALTER TABLE `users`
   ADD UNIQUE KEY `username` (`username`);
 
 --
+-- Indexes for table `website_feedback`
+--
+ALTER TABLE `website_feedback`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `user_id` (`user_id`),
+  ADD KEY `idx_feedback_rating` (`rating`),
+  ADD KEY `idx_feedback_created` (`created_at`);
+
+--
 -- AUTO_INCREMENT for dumped tables
 --
 
@@ -253,7 +319,7 @@ ALTER TABLE `categories`
 -- AUTO_INCREMENT for table `destinations`
 --
 ALTER TABLE `destinations`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=50;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=51;
 
 --
 -- AUTO_INCREMENT for table `destination_images`
@@ -265,7 +331,7 @@ ALTER TABLE `destination_images`
 -- AUTO_INCREMENT for table `reviews`
 --
 ALTER TABLE `reviews`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `routes`
@@ -278,6 +344,12 @@ ALTER TABLE `routes`
 --
 ALTER TABLE `users`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT for table `website_feedback`
+--
+ALTER TABLE `website_feedback`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- Constraints for dumped tables
@@ -308,6 +380,12 @@ ALTER TABLE `reviews`
 ALTER TABLE `routes`
   ADD CONSTRAINT `routes_ibfk_1` FOREIGN KEY (`origin_id`) REFERENCES `destinations` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `routes_ibfk_2` FOREIGN KEY (`destination_id`) REFERENCES `destinations` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `website_feedback`
+--
+ALTER TABLE `website_feedback`
+  ADD CONSTRAINT `website_feedback_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

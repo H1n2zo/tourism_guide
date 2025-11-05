@@ -155,6 +155,9 @@ $destinations = $conn->query($query);
                     <li class="nav-item">
                         <a class="nav-link" href="#routes"><i class="fas fa-route"></i> Find Route</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="feedback.php"><i class="fas fa-comment"></i> Feedback</a>
+                    </li>
                     <?php if (isLoggedIn()): ?>
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
@@ -330,7 +333,7 @@ $destinations = $conn->query($query);
 
         // Initialize Leaflet Map (FREE!)
         function initMap() {
-            // Center on Cebu City
+            // Center on Ormoc City, Leyte
             map = L.map('map').setView([11.0059, 124.6075], 13);
             
             // Add OpenStreetMap tiles (FREE!)
@@ -401,12 +404,13 @@ $destinations = $conn->query($query);
                 const duration = Math.round(summary.totalTime / 60);
                 
                 // Simple fare calculation (base PHP 40 + PHP 10 per km)
-                const baseFare = 0;
+                const baseFare = 40;
                 const farePerKm = 10;
+                const estimatedFare = baseFare + (distance * farePerKm);
                 
                 document.getElementById('distance').textContent = distance + ' km';
                 document.getElementById('duration').textContent = duration + ' minutes';
-                document.getElementById('fare').textContent = 'PHP ' + estimatedFare.toFixed(2) + ' (Transport estimate)';
+                document.getElementById('fare').textContent = 'PHP ' + estimatedFare.toFixed(2) + ' (Jeepney/Bus estimate)';
                 document.getElementById('routeInfo').style.display = 'block';
             }).addTo(map);
         }

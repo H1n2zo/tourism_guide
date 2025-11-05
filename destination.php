@@ -25,6 +25,35 @@ $images_stmt->bind_param("i", $id);
 $images_stmt->execute();
 $images = $images_stmt->get_result();
 
+// Fetch reviews
+$reviews_stmt = $conn->prepare("SELECT * FROM reviews WHERE destination_id = ? AND is_approved = 1 ORDER BY created_at DESC");
+$reviews_stmt->bind_param("i", $id);
+$reviews_stmt->execute();
+$reviews = $reviews_stmt->get_result();
+
+// Calculate average rating
+$rating_stmt = $conn->prepare("SELECT COUNT(*) as count, AVG(rating) as avg_rating FROM reviews WHERE destination_id = ? AND is_approved = 1");
+$rating_stmt->bind_param("i", $id);
+$rating_stmt->execute();
+$rating_data = $rating_stmt->get_result()->fetch_assoc();
+
+// Handle review submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_review'])) {
+    $user_name = sanitizeInput($_POST['review_name']);
+    $rating = (int)$_POST['rating'];
+    $comment = sanitizeInput($_POST['comment']);
+    $user_id = isLoggedIn() ? $_SESSION['user_id'] : null;
+    
+    if ($rating >= 1 && $rating <= 5 && !empty($user_name)) {
+        $review_insert = $conn->prepare("INSERT INTO reviews (destination_id, user_id, user_name, rating, comment) VALUES (?, ?, ?, ?, ?)");
+        $review_insert->bind_param("iisis", $id, $user_id, $user_name, $rating, $comment);
+        if ($review_insert->execute()) {
+            header("Location: destination.php?id=$id&success=1");
+            exit();
+        }
+    }
+}
+
 $image = !empty($destination['image_path']) ? UPLOAD_URL . $destination['image_path'] : 'https://via.placeholder.com/800x400?text=' . urlencode($destination['name']);
 ?>
 <!DOCTYPE html>
