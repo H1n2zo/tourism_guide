@@ -401,7 +401,7 @@ $destinations = $conn->query($query);
                 const duration = Math.round(summary.totalTime / 60);
                 
                 // Simple fare calculation (base PHP 40 + PHP 10 per km)
-                const baseFare = 40;
+                const baseFare = 0;
                 const farePerKm = 10;
                 const estimatedFare = baseFare + (distance * farePerKm);
                 
