@@ -144,7 +144,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <i class="fas fa-sign-in-alt"></i> Login
                                 </button>
                                 <div class="text-center mt-3">
-                                    <small>Default Admin - Username: admin, Password: admin123</small>
+                                    <small>There's a difference between Admin and User.</small>
                                 </div>
                             </form>
                         </div>
