@@ -52,12 +52,12 @@ $destinations = $conn->query($query);
         }
         
         .navbar {
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            background: linear-gradient(135deg, #132365ff 0%, #4b59a3ff 100%);
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
         
         .hero-section {
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.9) 0%, rgba(118, 75, 162, 0.9) 100%),
+            background: linear-gradient(135deg, #132365ff 0%, #4b59a3ff 100%),
                         url('https://source.unsplash.com/1600x900/?cebu,tourism') center/cover;
             color: white;
             padding: 80px 0;

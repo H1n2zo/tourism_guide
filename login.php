@@ -65,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #132365ff 0%, #4b59a3ff 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -80,13 +80,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             box-shadow: 0 10px 40px rgba(0,0,0,0.2);
         }
         .card-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #132365ff 0%, #4b59a3ff 100%);
             color: white;
             border-radius: 15px 15px 0 0 !important;
             padding: 20px;
         }
         .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #132365ff 0%, #4b59a3ff 100%);
             border: none;
         }
         .btn-primary:hover {
@@ -107,10 +107,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="card-header">
                     <ul class="nav nav-tabs card-header-tabs" role="tablist">
                         <li class="nav-item">
-                            <a class="nav-link active text-white" data-bs-toggle="tab" href="#login">Login</a>
+                            <a class="nav-link active text-black" data-bs-toggle="tab" href="#login">Login</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-white" data-bs-toggle="tab" href="#register">Register</a>
+                            <a class="nav-link text-black" data-bs-toggle="tab" href="#register">Register</a>
                         </li>
                     </ul>
                 </div>

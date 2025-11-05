@@ -45,11 +45,11 @@ $avg_rating_data = $avg_rating_query->fetch_assoc();
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         .navbar {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #132365ff 0%, #4b59a3ff 100%);
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
         .hero-section {
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.9) 0%, rgba(118, 75, 162, 0.9) 100%);
+            background: linear-gradient(135deg, #132365ff 0%, #4b59a3ff 100%);
             color: white;
             padding: 60px 0 80px;
         }

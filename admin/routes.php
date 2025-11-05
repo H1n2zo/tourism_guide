@@ -77,7 +77,7 @@ $destinations = $conn->query("SELECT id, name FROM destinations WHERE is_active 
     <style>
         .sidebar {
             min-height: 100vh;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #2e50e8ff 0%, #8017e8ff 100%);
             color: white;
             position: fixed;
             width: 250px;
