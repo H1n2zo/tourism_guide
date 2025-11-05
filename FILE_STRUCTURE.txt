@@ -1,0 +1,320 @@
+=============================================
+TOURISM GUIDE SYSTEM - FILE STRUCTURE GUIDE
+🎉 FREE VERSION - NO API KEYS REQUIRED!
+=============================================
+
+Save files EXACTLY in this structure inside:
+C:\xampp\htdocs\tourism_guide\    (Windows)
+/opt/lampp/htdocs/tourism_guide/  (Linux/Mac)
+
+ROOT DIRECTORY FILES:
+=====================
+tourism_guide/
+├── index.php              ← Main user interface with FREE maps
+├── login.php              ← Login and registration page
+├── logout.php             ← Logout script
+├── destination.php        ← Destination details with FREE map
+├── README.md              ← Project documentation (explains FREE maps!)
+├── INSTALLATION_GUIDE.md  ← Installation instructions (NO API keys!)
+└── FILE_STRUCTURE.txt     ← This file
+
+CONFIG FOLDER:
+==============
+tourism_guide/config/
+└── database.php           ← Database config (NO API KEY needed!)
+
+ADMIN FOLDER:
+=============
+tourism_guide/admin/
+├── dashboard.php          ← Admin dashboard (homepage for admins)
+├── destinations.php       ← View/manage all destinations
+├── add_destination.php    ← Add/edit destinations (FREE map picker!)
+├── edit_destination.php   ← Redirect to add_destination.php
+├── categories.php         ← Manage categories
+├── routes.php             ← Manage routes (FREE routing!)
+└── users.php              ← Manage user accounts
+
+UPLOADS FOLDER:
+===============
+tourism_guide/uploads/
+├── destinations/          ← Destination images stored here (auto-created)
+└── categories/            ← Category images stored here (auto-created)
+
+Note: The uploads folders will be automatically created by the system,
+but you can manually create them if needed.
+
+FOLDER CREATION COMMANDS:
+=========================
+
+Windows (Command Prompt):
+cd C:\xampp\htdocs
+mkdir tourism_guide
+cd tourism_guide
+mkdir config
+mkdir admin
+mkdir uploads
+cd uploads
+mkdir destinations
+mkdir categories
+
+Linux/Mac (Terminal):
+cd /opt/lampp/htdocs
+mkdir tourism_guide
+cd tourism_guide
+mkdir config admin uploads
+cd uploads
+mkdir destinations categories
+
+PERMISSIONS (Linux/Mac only):
+==============================
+chmod 755 tourism_guide
+chmod 755 tourism_guide/uploads
+chmod 777 tourism_guide/uploads/destinations
+chmod 777 tourism_guide/uploads/categories
+
+DATABASE FILE:
+==============
+Create this SQL file and import via phpMyAdmin:
+tourism_db.sql             ← Contains all table structures and sample data
+
+STEP-BY-STEP FILE SAVING:
+==========================
+
+1. Create main folder: C:\xampp\htdocs\tourism_guide\
+
+2. Save root files directly in tourism_guide folder:
+   - index.php              (Now with FREE OpenStreetMap!)
+   - login.php
+   - logout.php
+   - destination.php        (Now with FREE map view!)
+   - README.md              (Explains FREE mapping!)
+   - INSTALLATION_GUIDE.md  (NO API KEY setup needed!)
+   - FILE_STRUCTURE.txt
+
+3. Create "config" folder and save inside it:
+   - database.php           (NO API KEY configuration needed!)
+
+4. Create "admin" folder and save inside it:
+   - dashboard.php
+   - destinations.php
+   - add_destination.php    (FREE map coordinate picker!)
+   - edit_destination.php
+   - categories.php
+   - routes.php             (FREE route calculation!)
+   - users.php
+
+5. Create "uploads" folder with subfolders:
+   - destinations/ (subfolder) - Images stored FREE locally
+   - categories/ (subfolder)
+   These will store uploaded images automatically (no cloud costs!)
+
+6. Import database:
+   - Open phpMyAdmin (http://localhost/phpmyadmin)
+   - Create database named: tourism_guide
+   - Import tourism_db.sql file
+
+VERIFICATION CHECKLIST:
+=======================
+✓ XAMPP installed and running (Apache + MySQL)
+✓ tourism_guide folder exists in htdocs
+✓ All root files present (index.php, login.php, etc.)
+✓ config folder with database.php exists
+✓ admin folder with all 7 PHP files exists
+✓ uploads folder with destinations/ and categories/ subfolders exists
+✓ Database "tourism_guide" created in phpMyAdmin
+✓ SQL file imported successfully
+✓ BASE_URL matches your local setup in config/database.php
+✗ NO API KEY NEEDED - Skip this step entirely! 🎉
+
+ACCESS URLS:
+============
+User Homepage:    http://localhost/tourism_guide/
+                  ↑ FREE OpenStreetMap here!
+Login Page:       http://localhost/tourism_guide/login.php
+Admin Dashboard:  http://localhost/tourism_guide/admin/dashboard.php
+                  ↑ FREE map picker here!
+phpMyAdmin:       http://localhost/phpmyadmin/
+
+DEFAULT LOGIN:
+==============
+Username: admin
+Password: admin123
+
+🆓 FREE MAPPING FEATURES:
+==========================
+✅ Interactive maps on homepage (OpenStreetMap)
+✅ Map picker in admin panel (Leaflet)
+✅ Route calculation with FREE routing API
+✅ Distance and fare estimation
+✅ GPS location detection
+✅ No API keys required
+✅ No credit card needed
+✅ No usage limits
+✅ No monthly bills
+✅ 100% FREE forever!
+
+WHY NO API KEY?
+===============
+We replaced Google Maps ($200/month free then PAID) with:
+→ OpenStreetMap (FREE forever)
+→ Leaflet library (FREE, open-source)
+→ Leaflet Routing Machine (FREE routing)
+
+Benefits:
+✅ No registration required
+✅ No credit card needed
+✅ No trial periods
+✅ No expiration dates
+✅ No usage restrictions
+✅ No surprise bills
+✅ Better for education
+✅ Privacy friendly
+✅ Community supported
+
+WHAT CHANGED FROM GOOGLE MAPS VERSION:
+=======================================
+OLD (Google Maps):
+- Required API Key from Google Cloud Console
+- Needed credit card registration
+- $200 free credit per month then PAID
+- Complex setup process
+- Usage limits after free tier
+- Monthly billing concerns
+
+NEW (OpenStreetMap + Leaflet):
+- ✅ NO API Key needed
+- ✅ NO credit card needed
+- ✅ 100% FREE forever
+- ✅ Simple setup (just works!)
+- ✅ NO usage limits
+- ✅ NO monthly bills ever!
+
+FILES THAT CHANGED:
+===================
+✓ config/database.php        - Removed API key configuration
+✓ index.php                  - Now uses Leaflet + OpenStreetMap
+✓ destination.php            - Now uses Leaflet map
+✓ admin/add_destination.php  - FREE map picker with Leaflet
+✓ README.md                  - Updated with FREE info
+✓ INSTALLATION_GUIDE.md      - Removed API key steps
+
+All other files remain the same!
+
+IMPORTANT NOTES:
+================
+1. ALL files must be saved with UTF-8 encoding
+2. File extensions are case-sensitive (.php not .PHP)
+3. Folder names must be lowercase (admin, config, uploads)
+4. Do NOT add extra spaces in filenames
+5. Make sure Apache and MySQL are running before testing
+6. Images will be automatically saved in uploads/destinations/
+7. You do NOT need to manually upload images to server
+8. The admin panel has CRUD functionality for everything
+9. Change admin password after first login!
+10. ✅ NO API KEY NEEDED - Skip all API setup steps!
+
+COMMON MISTAKES TO AVOID:
+=========================
+✗ Saving files outside tourism_guide folder
+✗ Wrong folder names (Admin instead of admin)
+✗ Missing config folder
+✗ Forgetting to create uploads subfolders
+✗ Not importing database SQL file
+✗ Not starting Apache/MySQL in XAMPP
+✗ Using wrong file extensions
+✗ Looking for API key fields (they don't exist!)
+✗ Trying to configure Google Maps (not needed!)
+✗ Wrong BASE_URL configuration
+
+TESTING THE FREE MAPS:
+======================
+1. Go to homepage: http://localhost/tourism_guide/
+2. See FREE interactive map with markers
+3. Click any marker - see destination popup
+4. Use route finder - select two destinations
+5. Click "Find" - see route drawn on FREE map
+6. See distance and fare calculation
+7. Go to admin panel
+8. Add destination → Click "Pick on Map"
+9. See FREE map picker - click to set location
+10. All features work without any API keys!
+
+NEED HELP?
+==========
+1. Check INSTALLATION_GUIDE.md for detailed steps
+2. Check README.md for feature documentation
+3. Verify all files are in correct locations
+4. Check XAMPP Control Panel - Apache and MySQL must be green
+5. Check browser console (F12) for JavaScript errors
+6. Check Apache error logs in XAMPP
+7. ✅ NO API KEY ISSUES - One less thing to worry about!
+
+TESTING CHECKLIST:
+==================
+□ Can access http://localhost/tourism_guide/
+□ Homepage loads without errors
+□ FREE map displays on homepage
+□ Can see destination markers on FREE map
+□ Can login with admin/admin123
+□ Admin dashboard displays
+□ Can add a category
+□ Can add a destination
+□ Can click "Pick on Map" and see FREE map picker
+□ Can upload image successfully
+□ Image appears on destination page
+□ FREE map loads on destination detail page
+□ Route finder works on homepage
+□ Route displays on FREE map
+□ Distance and fare calculation shows
+□ Can search destinations
+□ Can view destination details
+
+If all checks pass AND maps work, your FREE system is perfect! 🎉
+
+COST COMPARISON:
+================
+Google Maps Solution:
+- Setup: Free (requires credit card)
+- Free Tier: $200/month credit
+- After Free: $7 per 1,000 map loads
+- Annual Cost: $500-5,000+
+- Requirement: API Key + Credit Card
+
+Our FREE Solution:
+- Setup: ✅ FREE
+- Usage: ✅ FREE (unlimited)
+- Map Loads: ✅ FREE (no limits)
+- Routing: ✅ FREE (unlimited)
+- Annual Cost: ✅ $0.00
+- Requirement: ✅ NONE (just works!)
+
+WHAT YOU SAVE:
+==============
+✅ $200+ setup (no credit card needed)
+✅ $500-5000/year (no usage fees)
+✅ Time (no API key configuration)
+✅ Stress (no billing worries)
+✅ Complexity (simpler setup)
+
+SUPPORT:
+========
+FREE Mapping Resources:
+- OpenStreetMap: https://www.openstreetmap.org/
+- Leaflet Docs: https://leafletjs.com/reference.html
+- Leaflet Routing: https://www.liedman.net/leaflet-routing-machine/
+
+General Support:
+- Check Installation Guide
+- Check browser console for errors
+- Verify XAMPP services running
+- Review file structure matches this guide
+- ✅ Skip all API key troubleshooting!
+
+=============================================
+🎉 ENJOY YOUR 100% FREE TOURISM GUIDE SYSTEM!
+No API keys. No bills. No limits. Just maps!
+=============================================
+
+Version: 2.0 (FREE Edition)
+Last Updated: November 2025
+Total Cost: $0.00 Forever! 🎊
