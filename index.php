@@ -3,6 +3,11 @@ require_once 'config/database.php';
 
 $conn = getDBConnection();
 
+// Fetch statistics
+$total_destinations = $conn->query("SELECT COUNT(*) as count FROM destinations WHERE is_active = 1")->fetch_assoc()['count'];
+$total_reviews = $conn->query("SELECT COUNT(*) as count FROM reviews WHERE is_approved = 1")->fetch_assoc()['count'];
+$total_categories = $conn->query("SELECT COUNT(*) as count FROM categories")->fetch_assoc()['count'];
+
 // Fetch categories
 $categories = $conn->query("SELECT * FROM categories ORDER BY name");
 
@@ -28,18 +33,23 @@ if (!empty($search)) {
 $query .= " GROUP BY d.id ORDER BY d.name";
 
 $destinations = $conn->query($query);
+
+// Get all destinations for autocomplete
+$all_destinations = $conn->query("SELECT id, name FROM destinations WHERE is_active = 1 ORDER BY name");
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tourism Guide System</title>
+    <title>Tourism Guide System - Explore Ormoc City</title>
+    <meta name="description" content="Discover amazing places in Ormoc City with our interactive tourism guide. Find routes, view destinations, and plan your journey.">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Leaflet CSS - FREE OpenStreetMap -->
+    <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
     
     <style>
         :root {
@@ -62,6 +72,39 @@ $destinations = $conn->query($query);
             color: white;
             padding: 80px 0;
             margin-bottom: 30px;
+        }
+        
+        /* Statistics Row */
+        .stats-row {
+            display: flex;
+            justify-content: center;
+            gap: 50px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .stat-item {
+            text-align: center;
+            background: rgba(255,255,255,0.1);
+            padding: 20px 40px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s;
+        }
+        
+        .stat-item:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-item h3 {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 0;
+        }
+        
+        .stat-item p {
+            margin: 0;
+            opacity: 0.9;
         }
         
         #map {
@@ -109,10 +152,6 @@ $destinations = $conn->query($query);
             z-index: 10;
         }
         
-        .filter-btn {
-            margin: 5px;
-        }
-        
         .route-panel {
             background: white;
             padding: 20px;
@@ -148,9 +187,86 @@ $destinations = $conn->query($query);
             border-radius: 5px;
             margin-bottom: 8px;
         }
+        
+        /* Back to Top Button */
+        #backToTop {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, #132365ff 0%, #4b59a3ff 100%);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        
+        #backToTop.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        #backToTop:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+        }
+        
+        /* Loading Spinner */
+        .spinner-border-sm {
+            width: 1rem;
+            height: 1rem;
+        }
+        
+        /* Smooth Scroll */
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        /* Image skeleton loader */
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+        
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+        
+        .empty-state i {
+            font-size: 4rem;
+            color: #ccc;
+            margin-bottom: 20px;
+        }
+        
+        /* Print route button */
+        .route-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
+    <!-- Back to Top Button -->
+    <button id="backToTop" title="Back to top">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
         <div class="container-fluid">
@@ -202,6 +318,22 @@ $destinations = $conn->query($query);
             <h1 class="display-3 fw-bold mb-3">Discover Amazing Places</h1>
             <p class="lead mb-4">Explore tourist destinations, find routes, and plan your journey</p>
             <a href="#destinations" class="btn btn-light btn-lg"><i class="fas fa-compass"></i> Start Exploring</a>
+            
+            <!-- Statistics Row -->
+            <div class="stats-row">
+                <div class="stat-item">
+                    <h3><?php echo $total_destinations; ?></h3>
+                    <p>Destinations</p>
+                </div>
+                <div class="stat-item">
+                    <h3><?php echo $total_reviews; ?></h3>
+                    <p>Reviews</p>
+                </div>
+                <div class="stat-item">
+                    <h3><?php echo $total_categories; ?></h3>
+                    <p>Categories</p>
+                </div>
+            </div>
         </div>
     </section>
 
@@ -212,13 +344,25 @@ $destinations = $conn->query($query);
                 <div class="col-md-6">
                     <div class="input-group">
                         <span class="input-group-text"><i class="fas fa-search"></i></span>
-                        <input type="text" class="form-control" name="search" placeholder="Search destinations..." value="<?php echo htmlspecialchars($search); ?>">
+                        <input type="text" class="form-control" name="search" 
+                               placeholder="Search destinations..." 
+                               value="<?php echo htmlspecialchars($search); ?>"
+                               list="destinations-list"
+                               autocomplete="off">
+                        <datalist id="destinations-list">
+                            <?php while ($dest = $all_destinations->fetch_assoc()): ?>
+                                <option value="<?php echo htmlspecialchars($dest['name']); ?>">
+                            <?php endwhile; ?>
+                        </datalist>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <select class="form-select" name="category">
                         <option value="0">All Categories</option>
-                        <?php while ($cat = $categories->fetch_assoc()): ?>
+                        <?php 
+                        $categories->data_seek(0);
+                        while ($cat = $categories->fetch_assoc()): 
+                        ?>
                             <option value="<?php echo $cat['id']; ?>" <?php echo $category_filter == $cat['id'] ? 'selected' : ''; ?>>
                                 <?php echo htmlspecialchars($cat['name']); ?>
                             </option>
@@ -238,13 +382,18 @@ $destinations = $conn->query($query);
         <div class="row g-4">
             <?php 
             $destinations->data_seek(0);
-            while ($dest = $destinations->fetch_assoc()): 
-                $image = !empty($dest['image_path']) ? UPLOAD_URL . $dest['image_path'] : 'https://via.placeholder.com/400x300?text=' . urlencode($dest['name']);
+            if ($destinations->num_rows > 0):
+                while ($dest = $destinations->fetch_assoc()): 
+                    $image = !empty($dest['image_path']) ? UPLOAD_URL . $dest['image_path'] : 'https://via.placeholder.com/400x300?text=' . urlencode($dest['name']);
             ?>
                 <div class="col-md-4">
                     <div class="card destination-card">
                         <div class="position-relative">
-                            <img src="<?php echo htmlspecialchars($image); ?>" class="card-img-top" alt="<?php echo htmlspecialchars($dest['name']); ?>">
+                            <img src="<?php echo htmlspecialchars($image); ?>" 
+                                 class="card-img-top skeleton" 
+                                 alt="<?php echo htmlspecialchars($dest['name']); ?>"
+                                 loading="lazy"
+                                 onload="this.classList.remove('skeleton')">
                             <span class="category-badge">
                                 <i class="fas <?php echo htmlspecialchars($dest['icon']); ?>"></i> <?php echo htmlspecialchars($dest['category_name']); ?>
                             </span>
@@ -280,13 +429,25 @@ $destinations = $conn->query($query);
                         </div>
                     </div>
                 </div>
-            <?php endwhile; ?>
+            <?php 
+                endwhile;
+            else: 
+            ?>
+                <div class="col-12">
+                    <div class="empty-state">
+                        <i class="fas fa-search"></i>
+                        <h3>No destinations found</h3>
+                        <p class="text-muted">Try adjusting your search or filter criteria</p>
+                        <a href="index.php" class="btn btn-primary">Clear Filters</a>
+                    </div>
+                </div>
+            <?php endif; ?>
         </div>
     </div>
 
-        <!-- Map Section -->
+    <!-- Map Section -->
     <div class="container mt-5" id="routes">
-        <h2 class="mb-4"><i class="fas fa-map"></i> Interactive Map</h2>
+        <h2 class="mb-4"><i class="fas fa-map"></i> Interactive Map & Route Finder</h2>
         
         <div class="route-panel">
             <h5>Find Route & Estimate Fare</h5>
@@ -295,8 +456,12 @@ $destinations = $conn->query($query);
                     <label class="form-label">From</label>
                     <select class="form-select" id="origin">
                         <option value="">Select Origin</option>
-                        <?php $destinations->data_seek(0); while ($dest = $destinations->fetch_assoc()): ?>
-                            <option value="<?php echo $dest['latitude'].','.$dest['longitude']; ?>" data-name="<?php echo htmlspecialchars($dest['name']); ?>">
+                        <?php 
+                        $destinations->data_seek(0); 
+                        while ($dest = $destinations->fetch_assoc()): 
+                        ?>
+                            <option value="<?php echo $dest['latitude'].','.$dest['longitude']; ?>" 
+                                    data-name="<?php echo htmlspecialchars($dest['name']); ?>">
                                 <?php echo htmlspecialchars($dest['name']); ?>
                             </option>
                         <?php endwhile; ?>
@@ -306,8 +471,12 @@ $destinations = $conn->query($query);
                     <label class="form-label">To</label>
                     <select class="form-select" id="destination">
                         <option value="">Select Destination</option>
-                        <?php $destinations->data_seek(0); while ($dest = $destinations->fetch_assoc()): ?>
-                            <option value="<?php echo $dest['latitude'].','.$dest['longitude']; ?>" data-name="<?php echo htmlspecialchars($dest['name']); ?>">
+                        <?php 
+                        $destinations->data_seek(0); 
+                        while ($dest = $destinations->fetch_assoc()): 
+                        ?>
+                            <option value="<?php echo $dest['latitude'].','.$dest['longitude']; ?>" 
+                                    data-name="<?php echo htmlspecialchars($dest['name']); ?>">
                                 <?php echo htmlspecialchars($dest['name']); ?>
                             </option>
                         <?php endwhile; ?>
@@ -315,7 +484,7 @@ $destinations = $conn->query($query);
                 </div>
                 <div class="col-md-2">
                     <label class="form-label">&nbsp;</label>
-                    <button class="btn btn-primary w-100" onclick="calculateRoute()">
+                    <button class="btn btn-primary w-100" id="findRouteBtn" onclick="calculateRoute()">
                         <i class="fas fa-search-location"></i> Find
                     </button>
                 </div>
@@ -326,6 +495,15 @@ $destinations = $conn->query($query);
                     <p class="mb-1"><strong>Distance:</strong> <span id="distance"></span></p>
                     <p class="mb-1"><strong>Estimated Duration:</strong> <span id="duration"></span></p>
                     <p class="mb-0"><strong>Estimated Fare:</strong> <span id="fare"></span></p>
+                    
+                    <div class="route-actions">
+                        <button class="btn btn-sm btn-secondary" onclick="printRoute()">
+                            <i class="fas fa-print"></i> Print Route
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="clearRoute()">
+                            <i class="fas fa-times"></i> Clear
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -341,12 +519,12 @@ $destinations = $conn->query($query);
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
-    <!-- Leaflet JS - FREE OpenStreetMap -->
+    <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
     
     <script>
-        let map, routingControl;
+        let map, routingControl, currentRouteData = {};
         const destinations = <?php 
             $destinations->data_seek(0);
             $dest_array = [];
@@ -356,12 +534,12 @@ $destinations = $conn->query($query);
             echo json_encode($dest_array);
         ?>;
 
-        // Initialize Leaflet Map (FREE!)
+        // Initialize Leaflet Map
         function initMap() {
             // Center on Ormoc City, Leyte
             map = L.map('map').setView([11.0059, 124.6075], 13);
             
-            // Add OpenStreetMap tiles (FREE!)
+            // Add OpenStreetMap tiles
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
                 maxZoom: 19
@@ -386,7 +564,14 @@ $destinations = $conn->query($query);
                             <h6>${dest.name}</h6>
                             <p><i class="fas ${dest.icon}"></i> ${dest.category_name}</p>
                             ${ratingHtml}
-                            <a href="destination.php?id=${dest.id}" class="btn btn-sm btn-primary" style="margin-top: 8px;">View Details</a>
+                            <a href="destination.php?id=${dest.id}" 
+                                class="btn btn-sm btn-primary" 
+                                style="margin-top:8px; background-color:#0d6efd; border:none; color:white;"
+                                onmouseover="this.style.backgroundColor='black'; this.style.color='white';"
+                                onmouseout="this.style.backgroundColor='#0d6efd'; this.style.color='white';">
+                                View Details
+                            </a>
+
                         </div>
                     `;
 
@@ -403,11 +588,16 @@ $destinations = $conn->query($query);
         function calculateRoute() {
             const origin = document.getElementById('origin').value;
             const destination = document.getElementById('destination').value;
+            const btn = document.getElementById('findRouteBtn');
 
             if (!origin || !destination) {
                 alert('Please select both origin and destination');
                 return;
             }
+
+            // Show loading state
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Calculating...';
+            btn.disabled = true;
 
             const originCoords = origin.split(',');
             const destCoords = destination.split(',');
@@ -417,7 +607,7 @@ $destinations = $conn->query($query);
                 map.removeControl(routingControl);
             }
 
-            // Calculate route using Leaflet Routing Machine (FREE!)
+            // Calculate route using Leaflet Routing Machine
             routingControl = L.Routing.control({
                 waypoints: [
                     L.latLng(parseFloat(originCoords[0]), parseFloat(originCoords[1])),
@@ -425,7 +615,7 @@ $destinations = $conn->query($query);
                 ],
                 routeWhileDragging: false,
                 show: false,
-                createMarker: function() { return null; } // Don't create default markers
+                createMarker: function() { return null; }
             }).on('routesfound', function(e) {
                 const routes = e.routes;
                 const summary = routes[0].summary;
@@ -436,17 +626,81 @@ $destinations = $conn->query($query);
                 // Time in minutes
                 const duration = Math.round(summary.totalTime / 60);
                 
-                // Simple fare calculation (base PHP 10 + PHP 1 per km)
+                // Simple fare calculation
                 const baseFare = 10;
                 const farePerKm = 1;
                 const estimatedFare = baseFare + (distance * farePerKm);
+                
+                // Store route data
+                currentRouteData = {
+                    origin: document.getElementById('origin').options[document.getElementById('origin').selectedIndex].text,
+                    destination: document.getElementById('destination').options[document.getElementById('destination').selectedIndex].text,
+                    distance: distance,
+                    duration: duration,
+                    fare: estimatedFare.toFixed(2)
+                };
                 
                 document.getElementById('distance').textContent = distance + ' km';
                 document.getElementById('duration').textContent = duration + ' minutes';
                 document.getElementById('fare').textContent = 'PHP ' + estimatedFare.toFixed(2) + ' (Transport estimate)';
                 document.getElementById('routeInfo').style.display = 'block';
+                
+                // Reset button
+                btn.innerHTML = '<i class="fas fa-search-location"></i> Find';
+                btn.disabled = false;
             }).addTo(map);
         }
+
+        function clearRoute() {
+            if (routingControl) {
+                map.removeControl(routingControl);
+                routingControl = null;
+            }
+            document.getElementById('routeInfo').style.display = 'none';
+            document.getElementById('origin').value = '';
+            document.getElementById('destination').value = '';
+            currentRouteData = {};
+        }
+
+        function printRoute() {
+            if (!currentRouteData.origin) {
+                alert('Please calculate a route first');
+                return;
+            }
+
+            const printWindow = window.open('', '', 'height=600,width=800');
+            printWindow.document.write('<html><head><title>Route Information</title>');
+            printWindow.document.write('<style>body{font-family:Arial,sans-serif;padding:20px;}h1{color:#132365ff;}</style>');
+            printWindow.document.write('</head><body>');
+            printWindow.document.write('<h1>Tourism Guide - Route Information</h1>');
+            printWindow.document.write('<p><strong>From:</strong> ' + currentRouteData.origin + '</p>');
+            printWindow.document.write('<p><strong>To:</strong> ' + currentRouteData.destination + '</p>');
+            printWindow.document.write('<p><strong>Distance:</strong> ' + currentRouteData.distance + ' km</p>');
+            printWindow.document.write('<p><strong>Estimated Duration:</strong> ' + currentRouteData.duration + ' minutes</p>');
+            printWindow.document.write('<p><strong>Estimated Fare:</strong> PHP ' + currentRouteData.fare + '</p>');
+            printWindow.document.write('<p style="margin-top:30px;font-size:0.9em;color:#666;">Printed on: ' + new Date().toLocaleString() + '</p>');
+            printWindow.document.write('</body></html>');
+            printWindow.document.close();
+            printWindow.print();
+        }
+
+        // Back to Top Button
+        const backToTopBtn = document.getElementById('backToTop');
+        
+        window.addEventListener('scroll', () => {
+            if (window.pageYOffset > 300) {
+                backToTopBtn.classList.add('show');
+            } else {
+                backToTopBtn.classList.remove('show');
+            }
+        });
+        
+        backToTopBtn.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
 
         // Initialize map when page loads
         document.addEventListener('DOMContentLoaded', function() {

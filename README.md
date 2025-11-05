@@ -32,6 +32,8 @@
    - Navigate to the users table
    - Edit your user record
    - Change the role from "user" to "admin"
+
+If welling to help You can push "main" branch
 <<<<<<< HEAD
    - Save changes
 =======

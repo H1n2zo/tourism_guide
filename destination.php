@@ -55,6 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_review'])) {
 }
 
 $image = !empty($destination['image_path']) ? UPLOAD_URL . $destination['image_path'] : 'https://via.placeholder.com/800x400?text=' . urlencode($destination['name']);
+$current_url = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -62,11 +63,15 @@ $image = !empty($destination['image_path']) ? UPLOAD_URL . $destination['image_p
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo htmlspecialchars($destination['name']); ?> - Tourism Guide</title>
+    <meta name="description" content="<?php echo htmlspecialchars(substr($destination['description'], 0, 150)); ?>">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <!-- Lightbox CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/css/lightbox.min.css">
     
     <style>
         .hero-image {
@@ -134,9 +139,63 @@ $image = !empty($destination['image_path']) ? UPLOAD_URL . $destination['image_p
         .star-rating i:hover ~ i {
             color: #ffc107;
         }
+        
+        /* Breadcrumb */
+        .breadcrumb {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        /* Share buttons */
+        .share-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .share-btn {
+            flex: 1;
+            text-align: center;
+        }
+        
+        /* Back to top */
+        #backToTop {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, #132365ff 0%, #4b59a3ff 100%);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        
+        #backToTop.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        html {
+            scroll-behavior: smooth;
+        }
     </style>
 </head>
 <body>
+    <!-- Back to Top Button -->
+    <button id="backToTop" title="Back to top">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
@@ -166,6 +225,17 @@ $image = !empty($destination['image_path']) ? UPLOAD_URL . $destination['image_p
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
     <?php endif; ?>
+
+    <!-- Breadcrumb -->
+    <div class="container mt-3">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="index.php"><i class="fas fa-home"></i> Home</a></li>
+                <li class="breadcrumb-item"><a href="index.php#destinations">Destinations</a></li>
+                <li class="breadcrumb-item active" aria-current="page"><?php echo htmlspecialchars($destination['name']); ?></li>
+            </ol>
+        </nav>
+    </div>
 
     <!-- Hero Section -->
     <div class="hero-image" style="background-image: url('<?php echo $image; ?>');">
@@ -211,12 +281,13 @@ $image = !empty($destination['image_path']) ? UPLOAD_URL . $destination['image_p
                             <div class="row g-2">
                                 <?php while ($img = $images->fetch_assoc()): ?>
                                     <div class="col-md-4">
-                                        <img src="<?php echo UPLOAD_URL . htmlspecialchars($img['image_path']); ?>" 
-                                             class="img-fluid gallery-img" 
-                                             alt="<?php echo htmlspecialchars($img['caption']); ?>"
-                                             data-bs-toggle="modal" 
-                                             data-bs-target="#imageModal"
-                                             onclick="showImage('<?php echo UPLOAD_URL . htmlspecialchars($img['image_path']); ?>')">
+                                        <a href="<?php echo UPLOAD_URL . htmlspecialchars($img['image_path']); ?>" 
+                                           data-lightbox="gallery" 
+                                           data-title="<?php echo htmlspecialchars($img['caption']); ?>">
+                                            <img src="<?php echo UPLOAD_URL . htmlspecialchars($img['image_path']); ?>" 
+                                                 class="img-fluid gallery-img" 
+                                                 alt="<?php echo htmlspecialchars($img['caption']); ?>">
+                                        </a>
                                     </div>
                                 <?php endwhile; ?>
                             </div>
@@ -354,6 +425,28 @@ $image = !empty($destination['image_path']) ? UPLOAD_URL . $destination['image_p
                     </div>
                 </div>
 
+                <!-- Share This -->
+                <div class="card mb-4">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="fas fa-share-alt"></i> Share This Place</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="share-buttons">
+                            <a href="https://www.facebook.com/sharer/sharer.php?u=<?php echo urlencode($current_url); ?>" 
+                               target="_blank" class="btn btn-primary share-btn">
+                                <i class="fab fa-facebook"></i> Facebook
+                            </a>
+                            <a href="https://twitter.com/intent/tweet?url=<?php echo urlencode($current_url); ?>&text=<?php echo urlencode($destination['name']); ?>" 
+                               target="_blank" class="btn btn-info share-btn">
+                                <i class="fab fa-twitter"></i> Twitter
+                            </a>
+                        </div>
+                        <button class="btn btn-secondary w-100 mt-2" onclick="copyLink()">
+                            <i class="fas fa-link"></i> Copy Link
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Action Buttons -->
                 <div class="card">
                     <div class="card-body">
@@ -370,17 +463,6 @@ $image = !empty($destination['image_path']) ? UPLOAD_URL . $destination['image_p
         </div>
     </div>
 
-    <!-- Image Modal -->
-    <div class="modal fade" id="imageModal" tabindex="-1">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-body p-0">
-                    <img id="modalImage" src="" class="img-fluid w-100">
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Footer -->
     <footer class="bg-dark text-white text-center py-4">
         <p>&copy; 2025 Tourism Guide System. All rights reserved.</p>
@@ -392,11 +474,10 @@ $image = !empty($destination['image_path']) ? UPLOAD_URL . $destination['image_p
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
+    <!-- Lightbox JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/js/lightbox.min.js"></script>
+    
     <script>
-        function showImage(src) {
-            document.getElementById('modalImage').src = src;
-        }
-
         // Star Rating System
         const stars = document.querySelectorAll('#starRating i');
         const ratingInput = document.getElementById('rating');
@@ -457,6 +538,41 @@ $image = !empty($destination['image_path']) ? UPLOAD_URL . $destination['image_p
             .bindPopup('<h6><?php echo addslashes($destination['name']); ?></h6><p><?php echo addslashes($destination['address']); ?></p>')
             .openPopup();
         <?php endif; ?>
+        
+        // Copy link function
+        function copyLink() {
+            const url = window.location.href;
+            navigator.clipboard.writeText(url).then(() => {
+                alert('Link copied to clipboard!');
+            }).catch(() => {
+                alert('Failed to copy link');
+            });
+        }
+        
+        // Back to Top Button
+        const backToTopBtn = document.getElementById('backToTop');
+        
+        window.addEventListener('scroll', () => {
+            if (window.pageYOffset > 300) {
+                backToTopBtn.classList.add('show');
+            } else {
+                backToTopBtn.classList.remove('show');
+            }
+        });
+        
+        backToTopBtn.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+        
+        // Lightbox configuration
+        lightbox.option({
+            'resizeDuration': 200,
+            'wrapAround': true,
+            'albumLabel': "Image %1 of %2"
+        });
     </script>
 </body>
 </html>

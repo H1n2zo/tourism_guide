@@ -53,6 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $website = sanitizeInput($_POST['website']);
     $opening_hours = sanitizeInput($_POST['opening_hours']);
     $entry_fee = sanitizeInput($_POST['entry_fee']);
+    $rating = !empty($_POST['rating']) ? (float)$_POST['rating'] : 0;
     $is_active = isset($_POST['is_active']) ? 1 : 0;
     
     $image_path = $edit_mode ? $destination['image_path'] : '';
@@ -76,25 +77,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $conn->prepare("UPDATE destinations SET 
                 name = ?, category_id = ?, description = ?, address = ?,
                 latitude = ?, longitude = ?, contact_number = ?, email = ?,
-                website = ?, opening_hours = ?, entry_fee = ?,
+                website = ?, opening_hours = ?, entry_fee = ?, rating = ?,
                 image_path = ?, is_active = ?
                 WHERE id = ?");
             $stmt->bind_param("sissddsssssdsii", 
                 $name, $category_id, $description, $address,
                 $latitude, $longitude, $contact_number, $email,
-                $website, $opening_hours, $entry_fee,
+                $website, $opening_hours, $entry_fee, $rating,
                 $image_path, $is_active, $id
             );
         } else {
             $stmt = $conn->prepare("INSERT INTO destinations 
                 (name, category_id, description, address, latitude, longitude,
-                contact_number, email, website, opening_hours, entry_fee,
+                contact_number, email, website, opening_hours, entry_fee, rating,
                 image_path, is_active)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            $stmt->bind_param("sissddsssssdsi",
+            $stmt->bind_param("sissddsssssdsii",
                 $name, $category_id, $description, $address,
                 $latitude, $longitude, $contact_number, $email,
-                $website, $opening_hours, $entry_fee,
+                $website, $opening_hours, $entry_fee, $rating,
                 $image_path, $is_active
             );
         }
@@ -328,7 +329,12 @@ if ($edit_mode) {
                             </div>
 
                             <div class="row">
-                        
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Rating (0-5)</label>
+                                    <input type="number" class="form-control" name="rating" 
+                                           min="0" max="5" step="0.1" 
+                                           value="<?php echo $destination['rating'] ?? '0'; ?>">
+                                </div>
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Status</label>
                                     <div class="form-check form-switch">
