@@ -179,7 +179,6 @@ $categories = $conn->query("SELECT * FROM categories ORDER BY name");
                                 <th>Category</th>
                                 <th>Location</th>
                                 <th>Status</th>
-                                <th>Rating</th>
                                 <th>Created</th>
                                 <th>Actions</th>
                             </tr>
@@ -212,11 +211,6 @@ $categories = $conn->query("SELECT * FROM categories ORDER BY name");
                                             <?php else: ?>
                                                 <span class="badge bg-danger">Inactive</span>
                                             <?php endif; ?>
-                                        </td>
-                                        <td>
-                                            <span class="text-warning">
-                                                <?php echo $dest['rating'] > 0 ? $dest['rating'] . ' ★' : '-'; ?>
-                                            </span>
                                         </td>
                                         <td>
                                             <small><?php echo date('M d, Y', strtotime($dest['created_at'])); ?></small>

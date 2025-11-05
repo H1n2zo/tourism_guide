@@ -232,55 +232,6 @@ $destinations = $conn->query($query);
         </div>
     </div>
 
-    <!-- Map Section -->
-    <div class="container mt-5" id="routes">
-        <h2 class="mb-4"><i class="fas fa-map"></i> Interactive Map</h2>
-        
-        <div class="route-panel">
-            <h5>Find Route & Estimate Fare</h5>
-            <div class="row g-3">
-                <div class="col-md-5">
-                    <label class="form-label">From</label>
-                    <select class="form-select" id="origin">
-                        <option value="">Select Origin</option>
-                        <?php $destinations->data_seek(0); while ($dest = $destinations->fetch_assoc()): ?>
-                            <option value="<?php echo $dest['latitude'].','.$dest['longitude']; ?>" data-name="<?php echo htmlspecialchars($dest['name']); ?>">
-                                <?php echo htmlspecialchars($dest['name']); ?>
-                            </option>
-                        <?php endwhile; ?>
-                    </select>
-                </div>
-                <div class="col-md-5">
-                    <label class="form-label">To</label>
-                    <select class="form-select" id="destination">
-                        <option value="">Select Destination</option>
-                        <?php $destinations->data_seek(0); while ($dest = $destinations->fetch_assoc()): ?>
-                            <option value="<?php echo $dest['latitude'].','.$dest['longitude']; ?>" data-name="<?php echo htmlspecialchars($dest['name']); ?>">
-                                <?php echo htmlspecialchars($dest['name']); ?>
-                            </option>
-                        <?php endwhile; ?>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label">&nbsp;</label>
-                    <button class="btn btn-primary w-100" onclick="calculateRoute()">
-                        <i class="fas fa-search-location"></i> Find
-                    </button>
-                </div>
-            </div>
-            <div id="routeInfo" class="mt-3" style="display:none;">
-                <div class="alert alert-info">
-                    <h6><i class="fas fa-info-circle"></i> Route Information</h6>
-                    <p class="mb-1"><strong>Distance:</strong> <span id="distance"></span></p>
-                    <p class="mb-1"><strong>Estimated Duration:</strong> <span id="duration"></span></p>
-                    <p class="mb-0"><strong>Estimated Fare:</strong> <span id="fare"></span></p>
-                </div>
-            </div>
-        </div>
-        
-        <div id="map"></div>
-    </div>
-
     <!-- Destinations Grid -->
     <div class="container mt-5" id="destinations">
         <h2 class="mb-4"><i class="fas fa-map-pin"></i> Featured Destinations</h2>
@@ -331,6 +282,55 @@ $destinations = $conn->query($query);
                 </div>
             <?php endwhile; ?>
         </div>
+    </div>
+
+        <!-- Map Section -->
+    <div class="container mt-5" id="routes">
+        <h2 class="mb-4"><i class="fas fa-map"></i> Interactive Map</h2>
+        
+        <div class="route-panel">
+            <h5>Find Route & Estimate Fare</h5>
+            <div class="row g-3">
+                <div class="col-md-5">
+                    <label class="form-label">From</label>
+                    <select class="form-select" id="origin">
+                        <option value="">Select Origin</option>
+                        <?php $destinations->data_seek(0); while ($dest = $destinations->fetch_assoc()): ?>
+                            <option value="<?php echo $dest['latitude'].','.$dest['longitude']; ?>" data-name="<?php echo htmlspecialchars($dest['name']); ?>">
+                                <?php echo htmlspecialchars($dest['name']); ?>
+                            </option>
+                        <?php endwhile; ?>
+                    </select>
+                </div>
+                <div class="col-md-5">
+                    <label class="form-label">To</label>
+                    <select class="form-select" id="destination">
+                        <option value="">Select Destination</option>
+                        <?php $destinations->data_seek(0); while ($dest = $destinations->fetch_assoc()): ?>
+                            <option value="<?php echo $dest['latitude'].','.$dest['longitude']; ?>" data-name="<?php echo htmlspecialchars($dest['name']); ?>">
+                                <?php echo htmlspecialchars($dest['name']); ?>
+                            </option>
+                        <?php endwhile; ?>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">&nbsp;</label>
+                    <button class="btn btn-primary w-100" onclick="calculateRoute()">
+                        <i class="fas fa-search-location"></i> Find
+                    </button>
+                </div>
+            </div>
+            <div id="routeInfo" class="mt-3" style="display:none;">
+                <div class="alert alert-info">
+                    <h6><i class="fas fa-info-circle"></i> Route Information</h6>
+                    <p class="mb-1"><strong>Distance:</strong> <span id="distance"></span></p>
+                    <p class="mb-1"><strong>Estimated Duration:</strong> <span id="duration"></span></p>
+                    <p class="mb-0"><strong>Estimated Fare:</strong> <span id="fare"></span></p>
+                </div>
+            </div>
+        </div>
+        
+        <div id="map"></div>
     </div>
 
     <!-- Footer -->
