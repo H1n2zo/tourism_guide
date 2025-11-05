@@ -7,6 +7,7 @@ $conn = getDBConnection();
 // Get statistics
 $total_destinations = $conn->query("SELECT COUNT(*) as count FROM destinations")->fetch_assoc()['count'];
 $total_categories = $conn->query("SELECT COUNT(*) as count FROM categories")->fetch_assoc()['count'];
+$unread_feedback = $conn->query("SELECT COUNT(*) as count FROM website_feedback WHERE is_read = 0")->fetch_assoc()['count'];
 $total_routes = $conn->query("SELECT COUNT(*) as count FROM routes")->fetch_assoc()['count'];
 $active_destinations = $conn->query("SELECT COUNT(*) as count FROM destinations WHERE is_active = 1")->fetch_assoc()['count'];
 
@@ -239,6 +240,9 @@ $recent_destinations = $conn->query("SELECT d.*, c.name as category_name
                         </a>
                         <a href="destinations.php" class="btn btn-warning">
                             <i class="fas fa-cog"></i> Manage Destinations
+                        </a>
+                        <a href="reviews.php" class="btn btn-warning">
+                            <i class="fas fa-readme"></i> Manage Reviews
                         </a>
                     </div>
                 </div>

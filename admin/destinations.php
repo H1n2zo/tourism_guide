@@ -43,6 +43,8 @@ if ($category_filter > 0) {
     $query .= " AND d.category_id = $category_filter";
 }
 $query .= " ORDER BY d.created_at DESC";
+// Fetch unread feedback count
+$unread_feedback = $conn->query("SELECT COUNT(*) as count FROM website_feedback WHERE is_read = 0")->fetch_assoc()['count'];
 
 $destinations = $conn->query($query);
 $categories = $conn->query("SELECT * FROM categories ORDER BY name");
