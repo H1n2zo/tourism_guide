@@ -628,7 +628,7 @@ $all_destinations = $conn->query("SELECT id, name FROM destinations WHERE is_act
                 
                 // Simple fare calculation
                 const baseFare = 10;
-                const farePerKm = 1;
+                const farePerKm = .01;
                 const estimatedFare = baseFare + (distance * farePerKm);
                 
                 // Store route data
