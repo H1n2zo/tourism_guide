@@ -407,7 +407,7 @@ $destinations = $conn->query($query);
                 
                 document.getElementById('distance').textContent = distance + ' km';
                 document.getElementById('duration').textContent = duration + ' minutes';
-                document.getElementById('fare').textContent = 'PHP ' + estimatedFare.toFixed(2) + ' (Jeepney/Bus estimate)';
+                document.getElementById('fare').textContent = 'PHP ' + estimatedFare.toFixed(2) + ' (Transport estimate)';
                 document.getElementById('routeInfo').style.display = 'block';
             }).addTo(map);
         }
