@@ -39,12 +39,12 @@ $rating_data = $rating_stmt->get_result()->fetch_assoc();
 
 // Handle review submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_review'])) {
-    $user_name = sanitizeInput($_POST['review_name']);
+    $user_name = htmlspecialchars(trim($_POST['review_name']));
     $rating = (int)$_POST['rating'];
-    $comment = sanitizeInput($_POST['comment']);
-    $user_id = isLoggedIn() ? $_SESSION['user_id'] : null;
+    $comment = htmlspecialchars(trim($_POST['comment']));
+    $user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : null;
     
-    if ($rating >= 1 && $rating <= 5 && !empty($user_name)) {
+    if ($rating >= 1 && $rating <= 5 && !empty($user_name) && !empty($comment)) {
         $review_insert = $conn->prepare("INSERT INTO reviews (destination_id, user_id, user_name, rating, comment) VALUES (?, ?, ?, ?, ?)");
         $review_insert->bind_param("iisis", $id, $user_id, $user_name, $rating, $comment);
         if ($review_insert->execute()) {
@@ -61,7 +61,7 @@ $image = !empty($destination['image_path']) ? UPLOAD_URL . $destination['image_p
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo $destination['name']; ?> - Tourism Guide</title>
+    <title><?php echo htmlspecialchars($destination['name']); ?> - Tourism Guide</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -108,6 +108,32 @@ $image = !empty($destination['image_path']) ? UPLOAD_URL . $destination['image_p
         .gallery-img:hover {
             transform: scale(1.05);
         }
+        .review-card {
+            border-left: 4px solid #28a745;
+            background: #f8f9fa;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        .review-rating {
+            color: #ffc107;
+            font-size: 1rem;
+        }
+        .star-rating {
+            display: flex;
+            gap: 5px;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+        .star-rating i {
+            color: #ddd;
+            transition: color 0.2s;
+        }
+        .star-rating i.active,
+        .star-rating i:hover,
+        .star-rating i:hover ~ i {
+            color: #ffc107;
+        }
     </style>
 </head>
 <body>
@@ -133,23 +159,34 @@ $image = !empty($destination['image_path']) ? UPLOAD_URL . $destination['image_p
         </div>
     </nav>
 
+    <!-- Success Alert -->
+    <?php if (isset($_GET['success'])): ?>
+    <div class="alert alert-success alert-dismissible fade show m-3" role="alert">
+        <i class="fas fa-check-circle"></i> Thank you! Your review has been submitted successfully and is awaiting approval.
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <?php endif; ?>
+
     <!-- Hero Section -->
     <div class="hero-image" style="background-image: url('<?php echo $image; ?>');">
         <div class="hero-overlay">
             <div class="container">
                 <span class="badge bg-primary mb-2">
-                    <i class="fas <?php echo $destination['icon']; ?>"></i> <?php echo $destination['category_name']; ?>
+                    <i class="fas <?php echo htmlspecialchars($destination['icon']); ?>"></i> <?php echo htmlspecialchars($destination['category_name']); ?>
                 </span>
-                <h1 class="display-4 fw-bold"><?php echo $destination['name']; ?></h1>
-                <?php if ($destination['rating'] > 0): ?>
+                <h1 class="display-4 fw-bold"><?php echo htmlspecialchars($destination['name']); ?></h1>
+                <?php if ($rating_data['count'] > 0): ?>
                     <div class="rating mb-2">
-                        <?php for($i=0; $i<5; $i++): ?>
-                            <i class="fas fa-star<?php echo $i < $destination['rating'] ? '' : '-o'; ?>"></i>
+                        <?php 
+                        $avg_rating = round($rating_data['avg_rating']);
+                        for($i=0; $i<5; $i++): ?>
+                            <i class="fas fa-star<?php echo $i < $avg_rating ? '' : '-o'; ?>"></i>
                         <?php endfor; ?>
-                        <span class="ms-2"><?php echo $destination['rating']; ?> / 5</span>
+                        <span class="ms-2"><?php echo number_format($rating_data['avg_rating'], 1); ?> / 5</span>
+                        <span class="ms-2">(<?php echo $rating_data['count']; ?> reviews)</span>
                     </div>
                 <?php endif; ?>
-                <p class="lead"><i class="fas fa-map-marker-alt"></i> <?php echo $destination['address']; ?></p>
+                <p class="lead"><i class="fas fa-map-marker-alt"></i> <?php echo htmlspecialchars($destination['address']); ?></p>
             </div>
         </div>
     </div>
@@ -162,7 +199,7 @@ $image = !empty($destination['image_path']) ? UPLOAD_URL . $destination['image_p
                 <div class="card mb-4">
                     <div class="card-body">
                         <h3 class="card-title"><i class="fas fa-info-circle"></i> About This Place</h3>
-                        <p class="card-text"><?php echo nl2br($destination['description']); ?></p>
+                        <p class="card-text"><?php echo nl2br(htmlspecialchars($destination['description'])); ?></p>
                     </div>
                 </div>
 
@@ -174,12 +211,12 @@ $image = !empty($destination['image_path']) ? UPLOAD_URL . $destination['image_p
                             <div class="row g-2">
                                 <?php while ($img = $images->fetch_assoc()): ?>
                                     <div class="col-md-4">
-                                        <img src="<?php echo UPLOAD_URL . $img['image_path']; ?>" 
+                                        <img src="<?php echo UPLOAD_URL . htmlspecialchars($img['image_path']); ?>" 
                                              class="img-fluid gallery-img" 
-                                             alt="<?php echo $img['caption']; ?>"
+                                             alt="<?php echo htmlspecialchars($img['caption']); ?>"
                                              data-bs-toggle="modal" 
                                              data-bs-target="#imageModal"
-                                             onclick="showImage('<?php echo UPLOAD_URL . $img['image_path']; ?>')">
+                                             onclick="showImage('<?php echo UPLOAD_URL . htmlspecialchars($img['image_path']); ?>')">
                                     </div>
                                 <?php endwhile; ?>
                             </div>
@@ -196,6 +233,78 @@ $image = !empty($destination['image_path']) ? UPLOAD_URL . $destination['image_p
                         </div>
                     </div>
                 <?php endif; ?>
+
+                <!-- Reviews Section -->
+                <div class="card mb-4">
+                    <div class="card-header bg-success text-white">
+                        <h4 class="mb-0"><i class="fas fa-comments"></i> Reviews & Ratings</h4>
+                    </div>
+                    <div class="card-body">
+                        <?php if ($reviews->num_rows > 0): ?>
+                            <h5 class="mb-3">What visitors are saying:</h5>
+                            <?php while ($review = $reviews->fetch_assoc()): ?>
+                                <div class="review-card">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div>
+                                            <h6 class="mb-1"><i class="fas fa-user-circle"></i> <?php echo htmlspecialchars($review['user_name']); ?></h6>
+                                            <div class="review-rating">
+                                                <?php for($i=0; $i<5; $i++): ?>
+                                                    <i class="fas fa-star<?php echo $i < $review['rating'] ? '' : '-o'; ?>"></i>
+                                                <?php endfor; ?>
+                                            </div>
+                                        </div>
+                                        <small class="text-muted">
+                                            <i class="fas fa-clock"></i> <?php echo date('M d, Y', strtotime($review['created_at'])); ?>
+                                        </small>
+                                    </div>
+                                    <p class="mb-0"><?php echo nl2br(htmlspecialchars($review['comment'])); ?></p>
+                                </div>
+                            <?php endwhile; ?>
+                        <?php else: ?>
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle"></i> No reviews yet. Be the first to share your experience!
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+                <!-- Write Review Section -->
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0"><i class="fas fa-pen"></i> Write a Review</h4>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="">
+                            <div class="mb-3">
+                                <label for="review_name" class="form-label">Your Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="review_name" name="review_name" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Rating <span class="text-danger">*</span></label>
+                                <div class="star-rating" id="starRating">
+                                    <i class="far fa-star" data-rating="1"></i>
+                                    <i class="far fa-star" data-rating="2"></i>
+                                    <i class="far fa-star" data-rating="3"></i>
+                                    <i class="far fa-star" data-rating="4"></i>
+                                    <i class="far fa-star" data-rating="5"></i>
+                                </div>
+                                <input type="hidden" id="rating" name="rating" required>
+                                <small class="text-muted">Click on the stars to rate</small>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="comment" class="form-label">Your Review <span class="text-danger">*</span></label>
+                                <textarea class="form-control" id="comment" name="comment" rows="4" 
+                                          placeholder="Share your experience about this place..." required></textarea>
+                            </div>
+
+                            <button type="submit" name="submit_review" class="btn btn-success">
+                                <i class="fas fa-paper-plane"></i> Submit Review
+                            </button>
+                        </form>
+                    </div>
+                </div>
             </div>
 
             <!-- Sidebar -->
@@ -209,28 +318,28 @@ $image = !empty($destination['image_path']) ? UPLOAD_URL . $destination['image_p
                         <?php if ($destination['opening_hours']): ?>
                             <div class="info-card">
                                 <h6><i class="fas fa-clock"></i> Opening Hours</h6>
-                                <p class="mb-0"><?php echo $destination['opening_hours']; ?></p>
+                                <p class="mb-0"><?php echo htmlspecialchars($destination['opening_hours']); ?></p>
                             </div>
                         <?php endif; ?>
 
                         <?php if ($destination['entry_fee']): ?>
                             <div class="info-card">
                                 <h6><i class="fas fa-ticket-alt"></i> Entry Fee</h6>
-                                <p class="mb-0"><?php echo $destination['entry_fee']; ?></p>
+                                <p class="mb-0"><?php echo htmlspecialchars($destination['entry_fee']); ?></p>
                             </div>
                         <?php endif; ?>
 
                         <?php if ($destination['contact_number']): ?>
                             <div class="info-card">
                                 <h6><i class="fas fa-phone"></i> Contact</h6>
-                                <p class="mb-0"><?php echo $destination['contact_number']; ?></p>
+                                <p class="mb-0"><?php echo htmlspecialchars($destination['contact_number']); ?></p>
                             </div>
                         <?php endif; ?>
 
                         <?php if ($destination['email']): ?>
                             <div class="info-card">
                                 <h6><i class="fas fa-envelope"></i> Email</h6>
-                                <p class="mb-0"><?php echo $destination['email']; ?></p>
+                                <p class="mb-0"><?php echo htmlspecialchars($destination['email']); ?></p>
                             </div>
                         <?php endif; ?>
 
@@ -238,7 +347,7 @@ $image = !empty($destination['image_path']) ? UPLOAD_URL . $destination['image_p
                             <div class="info-card">
                                 <h6><i class="fas fa-globe"></i> Website</h6>
                                 <p class="mb-0">
-                                    <a href="<?php echo $destination['website']; ?>" target="_blank">Visit Website</a>
+                                    <a href="<?php echo htmlspecialchars($destination['website']); ?>" target="_blank">Visit Website</a>
                                 </p>
                             </div>
                         <?php endif; ?>
@@ -287,6 +396,52 @@ $image = !empty($destination['image_path']) ? UPLOAD_URL . $destination['image_p
         function showImage(src) {
             document.getElementById('modalImage').src = src;
         }
+
+        // Star Rating System
+        const stars = document.querySelectorAll('#starRating i');
+        const ratingInput = document.getElementById('rating');
+        
+        stars.forEach(star => {
+            star.addEventListener('click', function() {
+                const rating = this.getAttribute('data-rating');
+                ratingInput.value = rating;
+                
+                // Update star display
+                stars.forEach((s, index) => {
+                    if (index < rating) {
+                        s.classList.remove('far');
+                        s.classList.add('fas', 'active');
+                    } else {
+                        s.classList.remove('fas', 'active');
+                        s.classList.add('far');
+                    }
+                });
+            });
+            
+            // Hover effect
+            star.addEventListener('mouseenter', function() {
+                const rating = this.getAttribute('data-rating');
+                stars.forEach((s, index) => {
+                    if (index < rating) {
+                        s.classList.add('active');
+                    } else {
+                        s.classList.remove('active');
+                    }
+                });
+            });
+        });
+        
+        // Reset on mouse leave
+        document.getElementById('starRating').addEventListener('mouseleave', function() {
+            const currentRating = ratingInput.value;
+            stars.forEach((s, index) => {
+                if (currentRating && index < currentRating) {
+                    s.classList.add('active');
+                } else {
+                    s.classList.remove('active');
+                }
+            });
+        });
 
         // Initialize Leaflet map
         <?php if ($destination['latitude'] && $destination['longitude']): ?>

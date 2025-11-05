@@ -6,22 +6,26 @@ $conn = getDBConnection();
 // Fetch categories
 $categories = $conn->query("SELECT * FROM categories ORDER BY name");
 
-// Fetch destinations
+// Fetch destinations with average ratings from reviews
 $category_filter = isset($_GET['category']) ? (int)$_GET['category'] : 0;
-$search = isset($_GET['search']) ? sanitizeInput($_GET['search']) : '';
+$search = isset($_GET['search']) ? htmlspecialchars(trim($_GET['search'])) : '';
 
-$query = "SELECT d.*, c.name as category_name, c.icon 
+$query = "SELECT d.*, c.name as category_name, c.icon,
+          COUNT(r.id) as review_count,
+          ROUND(AVG(r.rating), 1) as avg_rating
           FROM destinations d 
           LEFT JOIN categories c ON d.category_id = c.id 
+          LEFT JOIN reviews r ON d.id = r.destination_id AND r.is_approved = 1
           WHERE d.is_active = 1";
 
 if ($category_filter > 0) {
     $query .= " AND d.category_id = $category_filter";
 }
 if (!empty($search)) {
-    $query .= " AND (d.name LIKE '%$search%' OR d.description LIKE '%$search%')";
+    $search_safe = $conn->real_escape_string($search);
+    $query .= " AND (d.name LIKE '%$search_safe%' OR d.description LIKE '%$search_safe%')";
 }
-$query .= " ORDER BY d.name";
+$query .= " GROUP BY d.id ORDER BY d.name";
 
 $destinations = $conn->query($query);
 ?>
@@ -119,6 +123,18 @@ $destinations = $conn->query($query);
         
         .rating {
             color: #ffc107;
+            font-size: 0.95rem;
+        }
+
+        .rating-text {
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .not-rated {
+            color: #999;
+            font-size: 0.85rem;
+            font-style: italic;
         }
 
         .leaflet-popup-content {
@@ -161,7 +177,7 @@ $destinations = $conn->query($query);
                     <?php if (isLoggedIn()): ?>
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
-                                <i class="fas fa-user"></i> <?php echo $_SESSION['username']; ?>
+                                <i class="fas fa-user"></i> <?php echo htmlspecialchars($_SESSION['username']); ?>
                             </a>
                             <ul class="dropdown-menu">
                                 <?php if (isAdmin()): ?>
@@ -196,7 +212,7 @@ $destinations = $conn->query($query);
                 <div class="col-md-6">
                     <div class="input-group">
                         <span class="input-group-text"><i class="fas fa-search"></i></span>
-                        <input type="text" class="form-control" name="search" placeholder="Search destinations..." value="<?php echo $search; ?>">
+                        <input type="text" class="form-control" name="search" placeholder="Search destinations..." value="<?php echo htmlspecialchars($search); ?>">
                     </div>
                 </div>
                 <div class="col-md-4">
@@ -204,7 +220,7 @@ $destinations = $conn->query($query);
                         <option value="0">All Categories</option>
                         <?php while ($cat = $categories->fetch_assoc()): ?>
                             <option value="<?php echo $cat['id']; ?>" <?php echo $category_filter == $cat['id'] ? 'selected' : ''; ?>>
-                                <?php echo $cat['name']; ?>
+                                <?php echo htmlspecialchars($cat['name']); ?>
                             </option>
                         <?php endwhile; ?>
                     </select>
@@ -228,8 +244,8 @@ $destinations = $conn->query($query);
                     <select class="form-select" id="origin">
                         <option value="">Select Origin</option>
                         <?php $destinations->data_seek(0); while ($dest = $destinations->fetch_assoc()): ?>
-                            <option value="<?php echo $dest['latitude'].','.$dest['longitude']; ?>" data-name="<?php echo $dest['name']; ?>">
-                                <?php echo $dest['name']; ?>
+                            <option value="<?php echo $dest['latitude'].','.$dest['longitude']; ?>" data-name="<?php echo htmlspecialchars($dest['name']); ?>">
+                                <?php echo htmlspecialchars($dest['name']); ?>
                             </option>
                         <?php endwhile; ?>
                     </select>
@@ -239,8 +255,8 @@ $destinations = $conn->query($query);
                     <select class="form-select" id="destination">
                         <option value="">Select Destination</option>
                         <?php $destinations->data_seek(0); while ($dest = $destinations->fetch_assoc()): ?>
-                            <option value="<?php echo $dest['latitude'].','.$dest['longitude']; ?>" data-name="<?php echo $dest['name']; ?>">
-                                <?php echo $dest['name']; ?>
+                            <option value="<?php echo $dest['latitude'].','.$dest['longitude']; ?>" data-name="<?php echo htmlspecialchars($dest['name']); ?>">
+                                <?php echo htmlspecialchars($dest['name']); ?>
                             </option>
                         <?php endwhile; ?>
                     </select>
@@ -277,22 +293,31 @@ $destinations = $conn->query($query);
                 <div class="col-md-4">
                     <div class="card destination-card">
                         <div class="position-relative">
-                            <img src="<?php echo $image; ?>" class="card-img-top" alt="<?php echo $dest['name']; ?>">
+                            <img src="<?php echo htmlspecialchars($image); ?>" class="card-img-top" alt="<?php echo htmlspecialchars($dest['name']); ?>">
                             <span class="category-badge">
-                                <i class="fas <?php echo $dest['icon']; ?>"></i> <?php echo $dest['category_name']; ?>
+                                <i class="fas <?php echo htmlspecialchars($dest['icon']); ?>"></i> <?php echo htmlspecialchars($dest['category_name']); ?>
                             </span>
                         </div>
                         <div class="card-body">
-                            <h5 class="card-title"><?php echo $dest['name']; ?></h5>
-                            <p class="card-text"><?php echo substr($dest['description'], 0, 100); ?>...</p>
+                            <h5 class="card-title"><?php echo htmlspecialchars($dest['name']); ?></h5>
+                            <p class="card-text"><?php echo htmlspecialchars(substr($dest['description'], 0, 100)); ?>...</p>
                             <div class="mb-2">
-                                <?php if ($dest['rating'] > 0): ?>
-                                    <span class="rating">
-                                        <?php for($i=0; $i<5; $i++): ?>
-                                            <i class="fas fa-star<?php echo $i < $dest['rating'] ? '' : '-o'; ?>"></i>
+                                <?php if ($dest['review_count'] > 0 && $dest['avg_rating'] > 0): ?>
+                                    <div class="rating">
+                                        <?php 
+                                        $avg = round($dest['avg_rating']);
+                                        for($i=0; $i<5; $i++): ?>
+                                            <i class="fas fa-star<?php echo $i < $avg ? '' : '-o'; ?>"></i>
                                         <?php endfor; ?>
-                                        <?php echo $dest['rating']; ?>
-                                    </span>
+                                    </div>
+                                    <small class="rating-text">
+                                        <?php echo number_format($dest['avg_rating'], 1); ?> / 5 
+                                        (<?php echo $dest['review_count']; ?> review<?php echo $dest['review_count'] != 1 ? 's' : ''; ?>)
+                                    </small>
+                                <?php else: ?>
+                                    <div class="not-rated">
+                                        <i class="far fa-star"></i> Not rated yet
+                                    </div>
                                 <?php endif; ?>
                             </div>
                             <a href="destination.php?id=<?php echo $dest['id']; ?>" class="btn btn-primary btn-sm">
@@ -348,12 +373,20 @@ $destinations = $conn->query($query);
                     const marker = L.marker([parseFloat(dest.latitude), parseFloat(dest.longitude)])
                         .addTo(map);
 
+                    const ratingHtml = dest.review_count > 0 
+                        ? `<div style="color: #ffc107; font-size: 0.9rem;">
+                             ${'★'.repeat(Math.round(dest.avg_rating))}${'☆'.repeat(5-Math.round(dest.avg_rating))}
+                             <span style="color: #666; font-size: 0.85rem;">${dest.avg_rating} (${dest.review_count})</span>
+                           </div>`
+                        : '<div style="color: #999; font-size: 0.85rem; font-style: italic;">Not rated yet</div>';
+
                     const popupContent = `
                         <div>
                             ${dest.image_path ? `<img src="<?php echo UPLOAD_URL; ?>${dest.image_path}" style="width:100%;height:120px;object-fit:cover;border-radius:5px;margin-bottom:8px;">` : ''}
                             <h6>${dest.name}</h6>
                             <p><i class="fas ${dest.icon}"></i> ${dest.category_name}</p>
-                            <a href="destination.php?id=${dest.id}" class="btn btn-sm btn-primary">View Details</a>
+                            ${ratingHtml}
+                            <a href="destination.php?id=${dest.id}" class="btn btn-sm btn-primary" style="margin-top: 8px;">View Details</a>
                         </div>
                     `;
 
@@ -403,7 +436,7 @@ $destinations = $conn->query($query);
                 // Time in minutes
                 const duration = Math.round(summary.totalTime / 60);
                 
-                // Simple fare calculation (base PHP 40 + PHP 10 per km)
+                // Simple fare calculation (base PHP 10 + PHP 1 per km)
                 const baseFare = 10;
                 const farePerKm = 1;
                 const estimatedFare = baseFare + (distance * farePerKm);
