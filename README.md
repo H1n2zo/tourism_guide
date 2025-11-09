@@ -3,6 +3,7 @@
 ## Step 1: Download the Project
 1. Visit the GitHub repository: https://github.com/H1n2zo/tourism_guide
 2. Download the ZIP file of the project
+3. Extract it to C:\xampp\htdocs
 
 ## Step 2: Setup Database
 1. Start XAMPP Control Panel
@@ -33,7 +34,7 @@
    - Edit your user record
    - Change the role from "user" to "admin"
 
-If welling to help You can push "main" branch
+If welling to help You can push "main" branch or other branch to be confirmed by the leader
 <<<<<<< HEAD
    - Save changes
 =======
