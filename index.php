@@ -313,7 +313,7 @@ $all_destinations = $conn->query("SELECT id, name FROM destinations WHERE is_act
     </nav>
 
     <!-- Hero Section -->
-    <section class="hero-section" id="home">
+    <section class="hero-section" id="home" style="margin-top: -50px">
         <div class="container text-center">
             <h1 class="display-3 fw-bold mb-3">Discover Amazing Places</h1>
             <p class="lead mb-4">Explore tourist destinations, find routes, and plan your journey</p>
