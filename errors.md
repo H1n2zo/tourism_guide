@@ -10,3 +10,6 @@ Into relying to routes table showing only routes saved data
 
 make card body for this with fa-icons and also with leaflet when we choose this route 
 it should show the waypoint or the roadlines
+
+# UI change login.php
+Change the login/register header to left and the form to right
