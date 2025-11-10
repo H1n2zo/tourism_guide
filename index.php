@@ -482,9 +482,6 @@ $all_destinations = $conn->query("SELECT id, name FROM destinations WHERE is_act
                     <div id="routeDetails"></div>
                     
                     <div class="route-actions mt-3">
-                        <button class="btn btn-sm btn-secondary" onclick="printRoute()">
-                            <i class="fas fa-print"></i> Print Route
-                        </button>
                         <button class="btn btn-sm btn-outline-secondary" onclick="clearRoute()">
                             <i class="fas fa-times"></i> Clear
                         </button>
@@ -653,32 +650,6 @@ $all_destinations = $conn->query("SELECT id, name FROM destinations WHERE is_act
             document.getElementById('showRouteBtn').disabled = true;
             selectedRouteData = null;
             currentRouteData = {};
-        }
-
-        function printRoute() {
-            if (!currentRouteData.origin) {
-                alert('Please select and show a route first');
-                return;
-            }
-
-            const printWindow = window.open('', '', 'height=600,width=800');
-            printWindow.document.write('<html><head><title>Route Information</title>');
-            printWindow.document.write('<style>body{font-family:Arial,sans-serif;padding:20px;}h1{color:#132365ff;}</style>');
-            printWindow.document.write('</head><body>');
-            printWindow.document.write('<h1>Tourism Guide - Route Information</h1>');
-            printWindow.document.write('<p><strong>From:</strong> ' + currentRouteData.origin + '</p>');
-            printWindow.document.write('<p><strong>To:</strong> ' + currentRouteData.destination + '</p>');
-            printWindow.document.write('<p><strong>Transport Mode:</strong> ' + currentRouteData.transport.charAt(0).toUpperCase() + currentRouteData.transport.slice(1) + '</p>');
-            printWindow.document.write('<p><strong>Distance:</strong> ' + currentRouteData.distance + ' km</p>');
-            printWindow.document.write('<p><strong>Estimated Duration:</strong> ' + currentRouteData.duration + ' minutes</p>');
-            printWindow.document.write('<p><strong>Estimated Fare:</strong> PHP ' + currentRouteData.fare + '</p>');
-            if (currentRouteData.description) {
-                printWindow.document.write('<p><strong>Note:</strong> ' + currentRouteData.description + '</p>');
-            }
-            printWindow.document.write('<p style="margin-top:30px;font-size:0.9em;color:#666;">Printed on: ' + new Date().toLocaleString() + '</p>');
-            printWindow.document.write('</body></html>');
-            printWindow.document.close();
-            printWindow.print();
         }
 
         // Back to Top Button
