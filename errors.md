@@ -1,15 +1,8 @@
 # UI change index.php
-Change Route Finder from manually choosing destination from/to 
-Into relying to routes table showing only routes saved data 
-  `transport_mode` enum('jeepney','taxi','bus','van','tricycle','walking') NOT NULL,
-  `distance_km` decimal(6,2) DEFAULT NULL,
-  `estimated_time_minutes` int(11) DEFAULT NULL,
-  `base_fare` decimal(8,2) DEFAULT NULL,
-  `fare_per_km` decimal(8,2) DEFAULT NULL,
-  `description` text DEFAULT NULL,
+Fix leaflet to show starting point to end point
+with yellow polyline
 
-make card body for this with fa-icons and also with leaflet when we choose this route 
-it should show the waypoint or the roadlines
-
-# UI change login.php
-Change the login/register header to left and the form to right
+CREATE TABLE `routes` (
+  `origin_id` int(11) DEFAULT NULL,
+  `destination_id` int(11) DEFAULT NULL,
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
