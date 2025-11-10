@@ -1,6 +1,7 @@
 # UI change index.php
 Fix leaflet to show starting point to end point
-with yellow polyline
+with yellow polyline when clicking the available routes
+also make filter by destinations and transport
 
 CREATE TABLE `routes` (
   `origin_id` int(11) DEFAULT NULL,

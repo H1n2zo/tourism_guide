@@ -354,6 +354,70 @@ $all_destinations = $conn->query("SELECT id, name FROM destinations WHERE is_act
             color: #ccc;
             margin-bottom: 15px;
         }
+
+        /* Leaflet Route Styling */
+        .leaflet-routing-container {
+            display: none !important;
+        }
+
+        .custom-marker div {
+            animation: markerBounce 0.5s ease-out;
+        }
+
+        @keyframes markerBounce {
+            0% { transform: translateY(-100px); opacity: 0; }
+            50% { transform: translateY(10px); }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+
+        .route-info-popup .leaflet-popup-content-wrapper {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            padding: 5px;
+        }
+
+        .route-info-popup .leaflet-popup-tip {
+            background: white;
+        }
+
+        .animated-route {
+            animation: dash 1s linear infinite;
+        }
+
+        @keyframes dash {
+            to {
+                stroke-dashoffset: -20;
+            }
+        }
+
+        .clear-route-btn {
+            position: absolute;
+            top: 80px;
+            right: 10px;
+            z-index: 1000;
+            background: white;
+            border: 2px solid #dc3545;
+            color: #dc3545;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            transition: all 0.3s;
+            display: none;
+        }
+
+        .clear-route-btn:hover {
+            background: #dc3545;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+        }
+
+        .clear-route-btn.show {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -545,97 +609,161 @@ $all_destinations = $conn->query("SELECT id, name FROM destinations WHERE is_act
         <h2 class="mb-4"><i class="fas fa-map"></i> Interactive Map & Route Finder</h2>
         
         <div class="route-panel">
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <h5 class="mb-3"><i class="fas fa-filter"></i> Filter Routes</h5>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Filter by Origin</label>
+                    <select class="form-select" id="filterOrigin" onchange="filterRoutes()">
+                        <option value="">All Origins</option>
+                        <?php 
+                        $filter_origins = $conn->query("SELECT DISTINCT d.id, d.name 
+                            FROM destinations d 
+                            INNER JOIN routes r ON d.id = r.origin_id 
+                            WHERE r.is_active = 1 
+                            ORDER BY d.name");
+                        while ($origin = $filter_origins->fetch_assoc()): 
+                        ?>
+                            <option value="<?php echo $origin['id']; ?>"><?php echo htmlspecialchars($origin['name']); ?></option>
+                        <?php endwhile; ?>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Filter by Destination</label>
+                    <select class="form-select" id="filterDestination" onchange="filterRoutes()">
+                        <option value="">All Destinations</option>
+                        <?php 
+                        $filter_destinations = $conn->query("SELECT DISTINCT d.id, d.name 
+                            FROM destinations d 
+                            INNER JOIN routes r ON d.id = r.destination_id 
+                            WHERE r.is_active = 1 
+                            ORDER BY d.name");
+                        while ($dest = $filter_destinations->fetch_assoc()): 
+                        ?>
+                            <option value="<?php echo $dest['id']; ?>"><?php echo htmlspecialchars($dest['name']); ?></option>
+                        <?php endwhile; ?>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Filter by Transport</label>
+                    <select class="form-select" id="filterTransport" onchange="filterRoutes()">
+                        <option value="">All Transport Modes</option>
+                        <option value="jeepney">Jeepney</option>
+                        <option value="taxi">Taxi</option>
+                        <option value="bus">Bus</option>
+                        <option value="van">Van</option>
+                        <option value="tricycle">Tricycle</option>
+                        <option value="walking">Walking</option>
+                    </select>
+                </div>
+            </div>
+
+            <hr class="my-4">
+            
             <h5 class="mb-4"><i class="fas fa-route"></i> Available Routes</h5>
             
-            <?php 
-            // Fetch all active routes
-            $saved_routes = $conn->query("SELECT r.*, 
-                o.name as origin_name, o.latitude as origin_lat, o.longitude as origin_lng,
-                d.name as destination_name, d.latitude as dest_lat, d.longitude as dest_lng
-                FROM routes r
-                LEFT JOIN destinations o ON r.origin_id = o.id
-                LEFT JOIN destinations d ON r.destination_id = d.id
-                WHERE r.is_active = 1
-                ORDER BY r.route_name");
-            
-            if ($saved_routes->num_rows > 0):
-                while ($route = $saved_routes->fetch_assoc()): 
-                    $route_label = $route['route_name'] ?: ($route['origin_name'] . ' to ' . $route['destination_name']);
-                    $totalFare = $route['base_fare'] + ($route['distance_km'] * $route['fare_per_km']);
-            ?>
-                <div class="route-card" onclick='selectRoute(<?php echo json_encode($route); ?>)' data-route-id="<?php echo $route['id']; ?>">
-                    <div class="route-header">
-                        <h6 class="route-title"><?php echo htmlspecialchars($route_label); ?></h6>
-                        <span class="transport-badge transport-<?php echo $route['transport_mode']; ?>">
-                            <i class="fas fa-<?php 
-                                echo $route['transport_mode'] == 'jeepney' ? 'bus' :
-                                     ($route['transport_mode'] == 'taxi' ? 'taxi' :
-                                     ($route['transport_mode'] == 'bus' ? 'bus-alt' :
-                                     ($route['transport_mode'] == 'van' ? 'shuttle-van' :
-                                     ($route['transport_mode'] == 'tricycle' ? 'motorcycle' : 'walking'))));
-                            ?>"></i>
-                            <?php echo ucfirst($route['transport_mode']); ?>
-                        </span>
-                    </div>
-                    
-                    <div class="route-locations">
-                        <i class="fas fa-map-marker-alt"></i>
-                        <span><?php echo htmlspecialchars($route['origin_name']); ?></span>
-                        <span class="route-arrow"><i class="fas fa-arrow-right"></i></span>
-                        <span><?php echo htmlspecialchars($route['destination_name']); ?></span>
-                    </div>
-                    
-                    <div class="route-details">
-                        <?php if ($route['distance_km']): ?>
-                        <div class="route-detail-item">
-                            <i class="fas fa-road"></i>
-                            <div>
-                                <span class="detail-label">Distance</span>
-                                <span class="detail-value"><?php echo number_format($route['distance_km'], 1); ?> km</span>
-                            </div>
+            <div id="routesContainer">
+                <?php 
+                // Fetch all active routes
+                $saved_routes = $conn->query("SELECT r.*, 
+                    o.name as origin_name, o.latitude as origin_lat, o.longitude as origin_lng,
+                    d.name as destination_name, d.latitude as dest_lat, d.longitude as dest_lng
+                    FROM routes r
+                    LEFT JOIN destinations o ON r.origin_id = o.id
+                    LEFT JOIN destinations d ON r.destination_id = d.id
+                    WHERE r.is_active = 1
+                    ORDER BY r.route_name");
+                
+                if ($saved_routes->num_rows > 0):
+                    while ($route = $saved_routes->fetch_assoc()): 
+                        $route_label = $route['route_name'] ?: ($route['origin_name'] . ' to ' . $route['destination_name']);
+                        $totalFare = $route['base_fare'] + ($route['distance_km'] * $route['fare_per_km']);
+                ?>
+                    <div class="route-card" 
+                         onclick='selectRoute(<?php echo json_encode($route); ?>)' 
+                         data-route-id="<?php echo $route['id']; ?>"
+                         data-origin-id="<?php echo $route['origin_id']; ?>"
+                         data-destination-id="<?php echo $route['destination_id']; ?>"
+                         data-transport="<?php echo $route['transport_mode']; ?>">
+                        <div class="route-header">
+                            <h6 class="route-title"><?php echo htmlspecialchars($route_label); ?></h6>
+                            <span class="transport-badge transport-<?php echo $route['transport_mode']; ?>">
+                                <i class="fas fa-<?php 
+                                    echo $route['transport_mode'] == 'jeepney' ? 'bus' :
+                                         ($route['transport_mode'] == 'taxi' ? 'taxi' :
+                                         ($route['transport_mode'] == 'bus' ? 'bus-alt' :
+                                         ($route['transport_mode'] == 'van' ? 'shuttle-van' :
+                                         ($route['transport_mode'] == 'tricycle' ? 'motorcycle' : 'walking'))));
+                                ?>"></i>
+                                <?php echo ucfirst($route['transport_mode']); ?>
+                            </span>
                         </div>
-                        <?php endif; ?>
                         
-                        <?php if ($route['estimated_time_minutes']): ?>
-                        <div class="route-detail-item">
-                            <i class="fas fa-clock"></i>
-                            <div>
-                                <span class="detail-label">Duration</span>
-                                <span class="detail-value"><?php echo $route['estimated_time_minutes']; ?> min</span>
-                            </div>
+                        <div class="route-locations">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span><?php echo htmlspecialchars($route['origin_name']); ?></span>
+                            <span class="route-arrow"><i class="fas fa-arrow-right"></i></span>
+                            <span><?php echo htmlspecialchars($route['destination_name']); ?></span>
                         </div>
-                        <?php endif; ?>
                         
-                        <?php if ($route['base_fare'] || $route['fare_per_km']): ?>
-                        <div class="route-detail-item">
-                            <i class="fas fa-peso-sign"></i>
-                            <div>
-                                <span class="detail-label">Fare</span>
-                                <span class="detail-value">₱<?php echo number_format($totalFare, 2); ?></span>
+                        <div class="route-details">
+                            <?php if ($route['distance_km']): ?>
+                            <div class="route-detail-item">
+                                <i class="fas fa-road"></i>
+                                <div>
+                                    <span class="detail-label">Distance</span>
+                                    <span class="detail-value"><?php echo number_format($route['distance_km'], 1); ?> km</span>
+                                </div>
                             </div>
+                            <?php endif; ?>
+                            
+                            <?php if ($route['estimated_time_minutes']): ?>
+                            <div class="route-detail-item">
+                                <i class="fas fa-clock"></i>
+                                <div>
+                                    <span class="detail-label">Duration</span>
+                                    <span class="detail-value"><?php echo $route['estimated_time_minutes']; ?> min</span>
+                                </div>
+                            </div>
+                            <?php endif; ?>
+                            
+                            <?php if ($route['base_fare'] || $route['fare_per_km']): ?>
+                            <div class="route-detail-item">
+                                <i class="fas fa-peso-sign"></i>
+                                <div>
+                                    <span class="detail-label">Fare</span>
+                                    <span class="detail-value">₱<?php echo number_format($totalFare, 2); ?></span>
+                                </div>
+                            </div>
+                            <?php endif; ?>
+                        </div>
+                        
+                        <?php if ($route['description']): ?>
+                        <div class="route-description">
+                            <i class="fas fa-info-circle"></i> <?php echo htmlspecialchars($route['description']); ?>
                         </div>
                         <?php endif; ?>
                     </div>
-                    
-                    <?php if ($route['description']): ?>
-                    <div class="route-description">
-                        <i class="fas fa-info-circle"></i> <?php echo htmlspecialchars($route['description']); ?>
+                <?php 
+                    endwhile;
+                else: 
+                ?>
+                    <div class="no-routes-message">
+                        <i class="fas fa-route"></i>
+                        <h5>No Routes Available</h5>
+                        <p>Routes will be displayed here once administrators add them to the system.</p>
                     </div>
-                    <?php endif; ?>
-                </div>
-            <?php 
-                endwhile;
-            else: 
-            ?>
-                <div class="no-routes-message">
-                    <i class="fas fa-route"></i>
-                    <h5>No Routes Available</h5>
-                    <p>Routes will be displayed here once administrators add them to the system.</p>
-                </div>
-            <?php endif; ?>
+                <?php endif; ?>
+            </div>
         </div>
         
-        <div id="map"></div>
+        <div style="position: relative;">
+            <button class="clear-route-btn" id="clearRouteBtn" onclick="clearRoute()">
+                <i class="fas fa-times-circle"></i> Clear Route
+            </button>
+            <div id="map"></div>
+        </div>
     </div>
 
     <!-- Footer -->
@@ -724,37 +852,197 @@ $all_destinations = $conn->query("SELECT id, name FROM destinations WHERE is_act
         function showRouteOnMap() {
             if (!selectedRouteData) return;
 
-            // Remove existing route
+            // Remove existing route and polylines
             if (routingControl) {
                 map.removeControl(routingControl);
             }
 
-            // Create new route
-            routingControl = L.Routing.control({
-                waypoints: [
-                    L.latLng(parseFloat(selectedRouteData.origin_lat), parseFloat(selectedRouteData.origin_lng)),
-                    L.latLng(parseFloat(selectedRouteData.dest_lat), parseFloat(selectedRouteData.dest_lng))
-                ],
-                routeWhileDragging: false,
-                show: false,
-                createMarker: function(i, wp, nWps) {
-                    const icon = L.divIcon({
-                        className: 'custom-marker',
-                        html: `<div style="background: ${i === 0 ? '#28a745' : '#dc3545'}; color: white; padding: 8px 12px; border-radius: 20px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">
-                                ${i === 0 ? '<i class="fas fa-map-marker-alt"></i> Start' : '<i class="fas fa-flag-checkered"></i> End'}
-                               </div>`,
-                        iconSize: [80, 40],
-                        iconAnchor: [40, 40]
-                    });
-                    return L.marker(wp.latLng, { icon: icon });
+            // Remove any existing polylines
+            map.eachLayer(function(layer) {
+                if (layer instanceof L.Polyline && !(layer instanceof L.Marker)) {
+                    map.removeLayer(layer);
                 }
-            }).on('routesfound', function(e) {
-                const routes = e.routes;
-                map.fitBounds(routes[0].bounds);
+            });
+
+            const startLat = parseFloat(selectedRouteData.origin_lat);
+            const startLng = parseFloat(selectedRouteData.origin_lng);
+            const endLat = parseFloat(selectedRouteData.dest_lat);
+            const endLng = parseFloat(selectedRouteData.dest_lng);
+
+            // Create simple yellow polyline from start to end
+            const yellowLine = L.polyline(
+                [[startLat, startLng], [endLat, endLng]], 
+                {
+                    color: '#ffc107',
+                    weight: 6,
+                    opacity: 0.8,
+                    dashArray: '10, 10',
+                    className: 'route-polyline'
+                }
+            ).addTo(map);
+
+            // Create custom start marker
+            const startIcon = L.divIcon({
+                className: 'custom-marker',
+                html: `<div style="background: #28a745; color: white; padding: 10px 15px; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 8px rgba(0,0,0,0.3); white-space: nowrap;">
+                        <i class="fas fa-map-marker-alt"></i> ${selectedRouteData.origin_name}
+                       </div>`,
+                iconSize: [150, 40],
+                iconAnchor: [75, 40]
+            });
+
+            const startMarker = L.marker([startLat, startLng], { 
+                icon: startIcon 
             }).addTo(map);
 
-            // Scroll to map
-            document.getElementById('map').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // Create custom end marker
+            const endIcon = L.divIcon({
+                className: 'custom-marker',
+                html: `<div style="background: #dc3545; color: white; padding: 10px 15px; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 8px rgba(0,0,0,0.3); white-space: nowrap;">
+                        <i class="fas fa-flag-checkered"></i> ${selectedRouteData.destination_name}
+                       </div>`,
+                iconSize: [150, 40],
+                iconAnchor: [75, 40]
+            });
+
+            const endMarker = L.marker([endLat, endLng], { 
+                icon: endIcon 
+            }).addTo(map);
+
+            // Show clear button
+            document.getElementById('clearRouteBtn').classList.add('show');
+
+            // Calculate bounds and fit map
+            const bounds = L.latLngBounds([startLat, startLng], [endLat, endLng]);
+            map.fitBounds(bounds, { padding: [80, 80] });
+
+            // Show route info popup at midpoint
+            const midLat = (startLat + endLat) / 2;
+            const midLng = (startLng + endLng) / 2;
+            
+            const distance = selectedRouteData.distance_km || 0;
+            const duration = selectedRouteData.estimated_time_minutes || 0;
+            const fare = (parseFloat(selectedRouteData.base_fare || 0) + (parseFloat(distance) * parseFloat(selectedRouteData.fare_per_km || 0))).toFixed(2);
+
+            L.popup({
+                closeButton: true,
+                className: 'route-info-popup'
+            })
+            .setLatLng([midLat, midLng])
+            .setContent(`
+                <div style="text-align: center; padding: 10px; min-width: 200px;">
+                    <h6 style="margin: 0 0 15px 0; color: #132365ff; font-size: 1.1rem;">
+                        <i class="fas fa-route"></i> Route Information
+                    </h6>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; font-size: 0.9rem;">
+                        <div style="text-align: center;">
+                            <i class="fas fa-road" style="color: #ffc107; font-size: 1.5rem;"></i><br>
+                            <strong style="display: block; margin-top: 5px;">${distance} km</strong>
+                            <small style="color: #666;">Distance</small>
+                        </div>
+                        <div style="text-align: center;">
+                            <i class="fas fa-clock" style="color: #17a2b8; font-size: 1.5rem;"></i><br>
+                            <strong style="display: block; margin-top: 5px;">${duration} min</strong>
+                            <small style="color: #666;">Duration</small>
+                        </div>
+                        <div style="text-align: center;">
+                            <i class="fas fa-peso-sign" style="color: #28a745; font-size: 1.5rem;"></i><br>
+                            <strong style="display: block; margin-top: 5px;">₱${fare}</strong>
+                            <small style="color: #666;">Fare</small>
+                        </div>
+                    </div>
+                    <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e0e0e0;">
+                        <small style="color: #666;">
+                            <i class="fas fa-${selectedRouteData.transport_mode == 'jeepney' ? 'bus' :
+                                 (selectedRouteData.transport_mode == 'taxi' ? 'taxi' :
+                                 (selectedRouteData.transport_mode == 'bus' ? 'bus-alt' :
+                                 (selectedRouteData.transport_mode == 'van' ? 'shuttle-van' :
+                                 (selectedRouteData.transport_mode == 'tricycle' ? 'motorcycle' : 'walking'))))}"></i>
+                            ${selectedRouteData.transport_mode.charAt(0).toUpperCase() + selectedRouteData.transport_mode.slice(1)}
+                        </small>
+                    </div>
+                </div>
+            `)
+            .openOn(map);
+
+            // Scroll to map smoothly
+            setTimeout(() => {
+                document.getElementById('map').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 100);
+        }
+
+        function clearRoute() {
+            if (routingControl) {
+                map.removeControl(routingControl);
+                routingControl = null;
+            }
+            
+            // Remove all polylines and custom markers
+            map.eachLayer(function(layer) {
+                if (layer instanceof L.Polyline || (layer instanceof L.Marker && layer.options.icon && layer.options.icon.options.className === 'custom-marker')) {
+                    map.removeLayer(layer);
+                }
+            });
+            
+            // Remove selection from all cards
+            document.querySelectorAll('.route-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            // Hide clear button
+            document.getElementById('clearRouteBtn').classList.remove('show');
+            
+            selectedRouteData = null;
+            
+            // Reset map view to Ormoc City center
+            map.setView([11.0059, 124.6075], 13);
+        }
+
+        function filterRoutes() {
+            const originFilter = document.getElementById('filterOrigin').value;
+            const destinationFilter = document.getElementById('filterDestination').value;
+            const transportFilter = document.getElementById('filterTransport').value;
+            
+            const routeCards = document.querySelectorAll('.route-card');
+            let visibleCount = 0;
+            
+            routeCards.forEach(card => {
+                const originId = card.getAttribute('data-origin-id');
+                const destinationId = card.getAttribute('data-destination-id');
+                const transport = card.getAttribute('data-transport');
+                
+                const matchOrigin = !originFilter || originId === originFilter;
+                const matchDestination = !destinationFilter || destinationId === destinationFilter;
+                const matchTransport = !transportFilter || transport === transportFilter;
+                
+                if (matchOrigin && matchDestination && matchTransport) {
+                    card.style.display = 'block';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+            
+            // Show/hide no results message
+            const container = document.getElementById('routesContainer');
+            let noResultsMsg = container.querySelector('.no-results-filter');
+            
+            if (visibleCount === 0) {
+                if (!noResultsMsg) {
+                    noResultsMsg = document.createElement('div');
+                    noResultsMsg.className = 'no-routes-message no-results-filter';
+                    noResultsMsg.innerHTML = `
+                        <i class="fas fa-search"></i>
+                        <h5>No Routes Found</h5>
+                        <p>No routes match your filter criteria. Try adjusting the filters.</p>
+                    `;
+                    container.appendChild(noResultsMsg);
+                }
+            } else {
+                if (noResultsMsg) {
+                    noResultsMsg.remove();
+                }
+            }
         }
 
         // Back to Top Button
