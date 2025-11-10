@@ -218,18 +218,10 @@ $all_destinations = $conn->query("SELECT id, name FROM destinations WHERE is_act
             box-shadow: 0 6px 20px rgba(0,0,0,0.4);
         }
         
-        /* Loading Spinner */
-        .spinner-border-sm {
-            width: 1rem;
-            height: 1rem;
-        }
-        
-        /* Smooth Scroll */
         html {
             scroll-behavior: smooth;
         }
         
-        /* Image skeleton loader */
         .skeleton {
             background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
             background-size: 200% 100%;
@@ -241,7 +233,6 @@ $all_destinations = $conn->query("SELECT id, name FROM destinations WHERE is_act
             100% { background-position: -200% 0; }
         }
         
-        /* Empty state */
         .empty-state {
             text-align: center;
             padding: 60px 20px;
@@ -253,7 +244,6 @@ $all_destinations = $conn->query("SELECT id, name FROM destinations WHERE is_act
             margin-bottom: 20px;
         }
         
-        /* Print route button */
         .route-actions {
             display: flex;
             gap: 10px;
@@ -445,58 +435,53 @@ $all_destinations = $conn->query("SELECT id, name FROM destinations WHERE is_act
         </div>
     </div>
 
-    <!-- Map Section -->
+    <!-- Map Section with Route Finder -->
     <div class="container mt-5" id="routes">
         <h2 class="mb-4"><i class="fas fa-map"></i> Interactive Map & Route Finder</h2>
         
         <div class="route-panel">
-            <h5>Find Route & Estimate Fare</h5>
+            <h5><i class="fas fa-route"></i> Select a Saved Route</h5>
             <div class="row g-3">
-                <div class="col-md-5">
-                    <label class="form-label">From</label>
-                    <select class="form-select" id="origin">
-                        <option value="">Select Origin</option>
+                <div class="col-md-10">
+                    <label class="form-label">Choose Route</label>
+                    <select class="form-select" id="routeSelector" onchange="selectSavedRoute()">
+                        <option value="">-- Select a saved route --</option>
                         <?php 
-                        $destinations->data_seek(0); 
-                        while ($dest = $destinations->fetch_assoc()): 
+                        // Fetch all active routes
+                        $saved_routes = $conn->query("SELECT r.*, 
+                            o.name as origin_name, o.latitude as origin_lat, o.longitude as origin_lng,
+                            d.name as destination_name, d.latitude as dest_lat, d.longitude as dest_lng
+                            FROM routes r
+                            LEFT JOIN destinations o ON r.origin_id = o.id
+                            LEFT JOIN destinations d ON r.destination_id = d.id
+                            WHERE r.is_active = 1
+                            ORDER BY r.route_name");
+                        
+                        while ($route = $saved_routes->fetch_assoc()): 
+                            $route_label = $route['route_name'] ?: ($route['origin_name'] . ' to ' . $route['destination_name']);
                         ?>
-                            <option value="<?php echo $dest['latitude'].','.$dest['longitude']; ?>" 
-                                    data-name="<?php echo htmlspecialchars($dest['name']); ?>">
-                                <?php echo htmlspecialchars($dest['name']); ?>
+                            <option value='<?php echo htmlspecialchars(json_encode($route)); ?>'>
+                                <?php echo htmlspecialchars($route_label); ?>
+                                (<?php echo ucfirst($route['transport_mode']); ?>)
                             </option>
                         <?php endwhile; ?>
                     </select>
-                </div>
-                <div class="col-md-5">
-                    <label class="form-label">To</label>
-                    <select class="form-select" id="destination">
-                        <option value="">Select Destination</option>
-                        <?php 
-                        $destinations->data_seek(0); 
-                        while ($dest = $destinations->fetch_assoc()): 
-                        ?>
-                            <option value="<?php echo $dest['latitude'].','.$dest['longitude']; ?>" 
-                                    data-name="<?php echo htmlspecialchars($dest['name']); ?>">
-                                <?php echo htmlspecialchars($dest['name']); ?>
-                            </option>
-                        <?php endwhile; ?>
-                    </select>
+                    <small class="text-muted">Routes are pre-configured by administrators</small>
                 </div>
                 <div class="col-md-2">
                     <label class="form-label">&nbsp;</label>
-                    <button class="btn btn-primary w-100" id="findRouteBtn" onclick="calculateRoute()">
-                        <i class="fas fa-search-location"></i> Find
+                    <button class="btn btn-primary w-100" id="showRouteBtn" onclick="showSelectedRoute()" disabled>
+                        <i class="fas fa-route"></i> Show
                     </button>
                 </div>
             </div>
+            
             <div id="routeInfo" class="mt-3" style="display:none;">
                 <div class="alert alert-info">
                     <h6><i class="fas fa-info-circle"></i> Route Information</h6>
-                    <p class="mb-1"><strong>Distance:</strong> <span id="distance"></span></p>
-                    <p class="mb-1"><strong>Estimated Duration:</strong> <span id="duration"></span></p>
-                    <p class="mb-0"><strong>Estimated Fare:</strong> <span id="fare"></span></p>
+                    <div id="routeDetails"></div>
                     
-                    <div class="route-actions">
+                    <div class="route-actions mt-3">
                         <button class="btn btn-sm btn-secondary" onclick="printRoute()">
                             <i class="fas fa-print"></i> Print Route
                         </button>
@@ -524,7 +509,7 @@ $all_destinations = $conn->query("SELECT id, name FROM destinations WHERE is_act
     <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
     
     <script>
-        let map, routingControl, currentRouteData = {};
+        let map, routingControl, currentRouteData = {}, selectedRouteData = null;
         const destinations = <?php 
             $destinations->data_seek(0);
             $dest_array = [];
@@ -536,16 +521,13 @@ $all_destinations = $conn->query("SELECT id, name FROM destinations WHERE is_act
 
         // Initialize Leaflet Map
         function initMap() {
-            // Center on Ormoc City, Leyte
             map = L.map('map').setView([11.0059, 124.6075], 13);
             
-            // Add OpenStreetMap tiles
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
                 maxZoom: 19
             }).addTo(map);
 
-            // Add markers for all destinations
             destinations.forEach(dest => {
                 if (dest.latitude && dest.longitude) {
                     const marker = L.marker([parseFloat(dest.latitude), parseFloat(dest.longitude)])
@@ -571,7 +553,6 @@ $all_destinations = $conn->query("SELECT id, name FROM destinations WHERE is_act
                                 onmouseout="this.style.backgroundColor='#0d6efd'; this.style.color='white';">
                                 View Details
                             </a>
-
                         </div>
                     `;
 
@@ -585,33 +566,38 @@ $all_destinations = $conn->query("SELECT id, name FROM destinations WHERE is_act
             document.getElementById('routes').scrollIntoView({behavior: 'smooth'});
         }
 
-        function calculateRoute() {
-            const origin = document.getElementById('origin').value;
-            const destination = document.getElementById('destination').value;
-            const btn = document.getElementById('findRouteBtn');
+        function selectSavedRoute() {
+            const selector = document.getElementById('routeSelector');
+            const showBtn = document.getElementById('showRouteBtn');
+            
+            if (selector.value) {
+                selectedRouteData = JSON.parse(selector.value);
+                showBtn.disabled = false;
+            } else {
+                selectedRouteData = null;
+                showBtn.disabled = true;
+                clearRoute();
+            }
+        }
 
-            if (!origin || !destination) {
-                alert('Please select both origin and destination');
+        function showSelectedRoute() {
+            if (!selectedRouteData) {
+                alert('Please select a route first');
                 return;
             }
 
-            // Show loading state
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Calculating...';
+            const btn = document.getElementById('showRouteBtn');
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Loading...';
             btn.disabled = true;
 
-            const originCoords = origin.split(',');
-            const destCoords = destination.split(',');
-
-            // Remove previous routing if exists
             if (routingControl) {
                 map.removeControl(routingControl);
             }
 
-            // Calculate route using Leaflet Routing Machine
             routingControl = L.Routing.control({
                 waypoints: [
-                    L.latLng(parseFloat(originCoords[0]), parseFloat(originCoords[1])),
-                    L.latLng(parseFloat(destCoords[0]), parseFloat(destCoords[1]))
+                    L.latLng(parseFloat(selectedRouteData.origin_lat), parseFloat(selectedRouteData.origin_lng)),
+                    L.latLng(parseFloat(selectedRouteData.dest_lat), parseFloat(selectedRouteData.dest_lng))
                 ],
                 routeWhileDragging: false,
                 show: false,
@@ -620,34 +606,40 @@ $all_destinations = $conn->query("SELECT id, name FROM destinations WHERE is_act
                 const routes = e.routes;
                 const summary = routes[0].summary;
                 
-                // Distance in km
-                const distance = (summary.totalDistance / 1000).toFixed(2);
+                const distance = selectedRouteData.distance_km || (summary.totalDistance / 1000).toFixed(2);
+                const duration = selectedRouteData.estimated_time_minutes || Math.round(summary.totalTime / 60);
+                const totalFare = parseFloat(selectedRouteData.base_fare || 0) + (parseFloat(distance) * parseFloat(selectedRouteData.fare_per_km || 0));
                 
-                // Time in minutes
-                const duration = Math.round(summary.totalTime / 60);
-                
-                // Simple fare calculation
-                const baseFare = 10;
-                const farePerKm = .01;
-                const estimatedFare = baseFare + (distance * farePerKm);
-                
-                // Store route data
                 currentRouteData = {
-                    origin: document.getElementById('origin').options[document.getElementById('origin').selectedIndex].text,
-                    destination: document.getElementById('destination').options[document.getElementById('destination').selectedIndex].text,
+                    origin: selectedRouteData.origin_name,
+                    destination: selectedRouteData.destination_name,
                     distance: distance,
                     duration: duration,
-                    fare: estimatedFare.toFixed(2)
+                    fare: totalFare.toFixed(2),
+                    transport: selectedRouteData.transport_mode,
+                    description: selectedRouteData.description
                 };
                 
-                document.getElementById('distance').textContent = distance + ' km';
-                document.getElementById('duration').textContent = duration + ' minutes';
-                document.getElementById('fare').textContent = 'PHP ' + estimatedFare.toFixed(2) + ' (Transport estimate)';
+                let detailsHTML = `
+                    <p class="mb-1"><strong>From:</strong> ${selectedRouteData.origin_name}</p>
+                    <p class="mb-1"><strong>To:</strong> ${selectedRouteData.destination_name}</p>
+                    <p class="mb-1"><strong>Transport:</strong> ${selectedRouteData.transport_mode.charAt(0).toUpperCase() + selectedRouteData.transport_mode.slice(1)}</p>
+                    <p class="mb-1"><strong>Distance:</strong> ${distance} km</p>
+                    <p class="mb-1"><strong>Estimated Duration:</strong> ${duration} minutes</p>
+                    <p class="mb-1"><strong>Estimated Fare:</strong> PHP ${totalFare.toFixed(2)}</p>
+                `;
+                
+                if (selectedRouteData.description) {
+                    detailsHTML += `<p class="mb-0 mt-2"><strong>Note:</strong> ${selectedRouteData.description}</p>`;
+                }
+                
+                document.getElementById('routeDetails').innerHTML = detailsHTML;
                 document.getElementById('routeInfo').style.display = 'block';
                 
-                // Reset button
-                btn.innerHTML = '<i class="fas fa-search-location"></i> Find';
+                btn.innerHTML = '<i class="fas fa-route"></i> Show';
                 btn.disabled = false;
+
+                map.fitBounds(routes[0].bounds);
             }).addTo(map);
         }
 
@@ -657,14 +649,15 @@ $all_destinations = $conn->query("SELECT id, name FROM destinations WHERE is_act
                 routingControl = null;
             }
             document.getElementById('routeInfo').style.display = 'none';
-            document.getElementById('origin').value = '';
-            document.getElementById('destination').value = '';
+            document.getElementById('routeSelector').value = '';
+            document.getElementById('showRouteBtn').disabled = true;
+            selectedRouteData = null;
             currentRouteData = {};
         }
 
         function printRoute() {
             if (!currentRouteData.origin) {
-                alert('Please calculate a route first');
+                alert('Please select and show a route first');
                 return;
             }
 
@@ -675,9 +668,13 @@ $all_destinations = $conn->query("SELECT id, name FROM destinations WHERE is_act
             printWindow.document.write('<h1>Tourism Guide - Route Information</h1>');
             printWindow.document.write('<p><strong>From:</strong> ' + currentRouteData.origin + '</p>');
             printWindow.document.write('<p><strong>To:</strong> ' + currentRouteData.destination + '</p>');
+            printWindow.document.write('<p><strong>Transport Mode:</strong> ' + currentRouteData.transport.charAt(0).toUpperCase() + currentRouteData.transport.slice(1) + '</p>');
             printWindow.document.write('<p><strong>Distance:</strong> ' + currentRouteData.distance + ' km</p>');
             printWindow.document.write('<p><strong>Estimated Duration:</strong> ' + currentRouteData.duration + ' minutes</p>');
             printWindow.document.write('<p><strong>Estimated Fare:</strong> PHP ' + currentRouteData.fare + '</p>');
+            if (currentRouteData.description) {
+                printWindow.document.write('<p><strong>Note:</strong> ' + currentRouteData.description + '</p>');
+            }
             printWindow.document.write('<p style="margin-top:30px;font-size:0.9em;color:#666;">Printed on: ' + new Date().toLocaleString() + '</p>');
             printWindow.document.write('</body></html>');
             printWindow.document.close();
@@ -702,7 +699,6 @@ $all_destinations = $conn->query("SELECT id, name FROM destinations WHERE is_act
             });
         });
 
-        // Initialize map when page loads
         document.addEventListener('DOMContentLoaded', function() {
             initMap();
         });

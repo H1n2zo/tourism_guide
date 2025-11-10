@@ -12,11 +12,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $origin_id = (int)$_POST['origin_id'];
     $destination_id = (int)$_POST['destination_id'];
     $transport_mode = sanitizeInput($_POST['transport_mode']);
-    $distance_km = (float)$_POST['distance_km'];
-    $estimated_time_minutes = (int)$_POST['estimated_time_minutes'];
-    $base_fare = (float)$_POST['base_fare'];
-    $fare_per_km = (float)$_POST['fare_per_km'];
-    $description = sanitizeInput($_POST['description']);
+    $distance_km = !empty($_POST['distance_km']) ? (float)$_POST['distance_km'] : NULL;
+    $estimated_time_minutes = !empty($_POST['estimated_time_minutes']) ? (int)$_POST['estimated_time_minutes'] : NULL;
+    $base_fare = !empty($_POST['base_fare']) ? (float)$_POST['base_fare'] : NULL;
+    $fare_per_km = !empty($_POST['fare_per_km']) ? (float)$_POST['fare_per_km'] : NULL;
+    $description = !empty($_POST['description']) ? sanitizeInput($_POST['description']) : NULL;
     $is_active = isset($_POST['is_active']) ? 1 : 0;
     
     if (isset($_POST['edit_id']) && !empty($_POST['edit_id'])) {
@@ -26,7 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 transport_mode = ?, distance_km = ?, estimated_time_minutes = ?, 
                                 base_fare = ?, fare_per_km = ?, description = ?, is_active = ? 
                                 WHERE id = ?");
-        $stmt->bind_param("siisddiidii", $route_name, $origin_id, $destination_id, $transport_mode,
+        $stmt->bind_param("siisdiidsii", $route_name, $origin_id, $destination_id, $transport_mode,
                          $distance_km, $estimated_time_minutes, $base_fare, $fare_per_km, 
                          $description, $is_active, $id);
         if ($stmt->execute()) {
@@ -37,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $conn->prepare("INSERT INTO routes (route_name, origin_id, destination_id, transport_mode, 
                                 distance_km, estimated_time_minutes, base_fare, fare_per_km, description, is_active) 
                                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("siisdiidis", $route_name, $origin_id, $destination_id, $transport_mode,
+        $stmt->bind_param("siisdiidsi", $route_name, $origin_id, $destination_id, $transport_mode,
                          $distance_km, $estimated_time_minutes, $base_fare, $fare_per_km, 
                          $description, $is_active);
         if ($stmt->execute()) {
@@ -56,7 +56,7 @@ if (isset($_GET['delete'])) {
     $success = "Route deleted successfully!";
 }
 
-// Fetch routes
+// Fetch all routes from the database
 $routes = $conn->query("SELECT r.*, o.name as origin_name, d.name as destination_name 
                         FROM routes r
                         LEFT JOIN destinations o ON r.origin_id = o.id
@@ -117,7 +117,7 @@ $destinations = $conn->query("SELECT id, name FROM destinations WHERE is_active 
             <a class="nav-link active" href="routes.php">
                 <i class="fas fa-route"></i> Routes
             </a>
-            <a class="nav-link active" href="reviews.php">
+            <a class="nav-link" href="reviews.php">
                 <i class="fas fa-star"></i> Reviews & Feedback
                 <?php if ($unread_feedback > 0): ?>
                     <span class="badge bg-danger"><?php echo $unread_feedback; ?></span>
@@ -167,7 +167,7 @@ $destinations = $conn->query("SELECT id, name FROM destinations WHERE is_active 
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Route Name</label>
                             <input type="text" class="form-control" name="route_name" id="routeName" 
-                                   placeholder="e.g., SM to Magellan's Cross">
+                                   placeholder="e.g., Terminal to Lake Danao">
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Transport Mode *</label>
@@ -213,25 +213,25 @@ $destinations = $conn->query("SELECT id, name FROM destinations WHERE is_active 
                     <div class="row">
                         <div class="col-md-3 mb-3">
                             <label class="form-label">Distance (km)</label>
-                            <input type="number" class="form-control" name="distance_km" id="distanceKm" step="0.1">
+                            <input type="number" class="form-control" name="distance_km" id="distanceKm" step="0.1" placeholder="0.00">
                         </div>
                         <div class="col-md-3 mb-3">
                             <label class="form-label">Est. Time (min)</label>
-                            <input type="number" class="form-control" name="estimated_time_minutes" id="estimatedTime">
+                            <input type="number" class="form-control" name="estimated_time_minutes" id="estimatedTime" placeholder="0">
                         </div>
                         <div class="col-md-3 mb-3">
                             <label class="form-label">Base Fare (PHP)</label>
-                            <input type="number" class="form-control" name="base_fare" id="baseFare" step="0.01">
+                            <input type="number" class="form-control" name="base_fare" id="baseFare" step="0.01" placeholder="0.00">
                         </div>
                         <div class="col-md-3 mb-3">
                             <label class="form-label">Fare per km (PHP)</label>
-                            <input type="number" class="form-control" name="fare_per_km" id="farePerKm" step="0.01">
+                            <input type="number" class="form-control" name="fare_per_km" id="farePerKm" step="0.01" placeholder="0.00">
                         </div>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Description</label>
-                        <textarea class="form-control" name="description" id="description" rows="2"></textarea>
+                        <textarea class="form-control" name="description" id="description" rows="2" placeholder="Optional route notes or instructions"></textarea>
                     </div>
 
                     <div class="mb-3">
@@ -278,11 +278,14 @@ $destinations = $conn->query("SELECT id, name FROM destinations WHERE is_active 
                                         <small class="text-muted">
                                             <?php echo $route['origin_name']; ?> → <?php echo $route['destination_name']; ?>
                                         </small>
+                                        <?php if ($route['description']): ?>
+                                            <br><small class="text-info"><i class="fas fa-info-circle"></i> <?php echo substr($route['description'], 0, 50); ?><?php echo strlen($route['description']) > 50 ? '...' : ''; ?></small>
+                                        <?php endif; ?>
                                     </td>
                                     <td><span class="badge bg-info"><?php echo ucfirst($route['transport_mode']); ?></span></td>
-                                    <td><?php echo $route['distance_km']; ?> km</td>
-                                    <td><?php echo $route['estimated_time_minutes']; ?> min</td>
-                                    <td>PHP <?php echo number_format($route['base_fare'] + ($route['distance_km'] * $route['fare_per_km']), 2); ?></td>
+                                    <td><?php echo $route['distance_km'] ? $route['distance_km'] . ' km' : 'N/A'; ?></td>
+                                    <td><?php echo $route['estimated_time_minutes'] ? $route['estimated_time_minutes'] . ' min' : 'N/A'; ?></td>
+                                    <td><?php echo ($route['base_fare'] || $route['fare_per_km']) ? 'PHP ' . number_format($route['base_fare'] + ($route['distance_km'] * $route['fare_per_km']), 2) : 'N/A'; ?></td>
                                     <td>
                                         <?php if ($route['is_active']): ?>
                                             <span class="badge bg-success">Active</span>
@@ -318,10 +321,10 @@ $destinations = $conn->query("SELECT id, name FROM destinations WHERE is_active 
             document.getElementById('transportMode').value = route.transport_mode;
             document.getElementById('originId').value = route.origin_id;
             document.getElementById('destinationId').value = route.destination_id;
-            document.getElementById('distanceKm').value = route.distance_km;
-            document.getElementById('estimatedTime').value = route.estimated_time_minutes;
-            document.getElementById('baseFare').value = route.base_fare;
-            document.getElementById('farePerKm').value = route.fare_per_km;
+            document.getElementById('distanceKm').value = route.distance_km || '';
+            document.getElementById('estimatedTime').value = route.estimated_time_minutes || '';
+            document.getElementById('baseFare').value = route.base_fare || '';
+            document.getElementById('farePerKm').value = route.fare_per_km || '';
             document.getElementById('description').value = route.description || '';
             document.getElementById('isActive').checked = route.is_active == 1;
             
