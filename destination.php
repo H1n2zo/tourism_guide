@@ -140,14 +140,6 @@ $current_url = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
             color: #ffc107;
         }
         
-        /* Breadcrumb */
-        .breadcrumb {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-        }
-        
         /* Share buttons */
         .share-buttons {
             display: flex;
@@ -225,17 +217,6 @@ $current_url = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
     <?php endif; ?>
-
-    <!-- Breadcrumb -->
-    <div class="container mt-3">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="index.php"><i class="fas fa-home"></i> Home</a></li>
-                <li class="breadcrumb-item"><a href="index.php#destinations">Destinations</a></li>
-                <li class="breadcrumb-item active" aria-current="page"><?php echo htmlspecialchars($destination['name']); ?></li>
-            </ol>
-        </nav>
-    </div>
 
     <!-- Hero Section -->
     <div class="hero-image" style="background-image: url('<?php echo $image; ?>');">
