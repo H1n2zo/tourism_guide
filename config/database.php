@@ -44,7 +44,7 @@ function isLoggedIn() {
 }
 
 function isAdmin() {
-    return isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
+    return isset($_SESSION['role']) && $_SESSION['role'] === 'ADMIN';
 }
 
 function requireLogin() {

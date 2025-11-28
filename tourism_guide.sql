@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 05, 2025 at 12:54 PM
+-- Generation Time: Nov 28, 2025 at 03:14 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -89,7 +89,7 @@ INSERT INTO `destinations` (`id`, `name`, `category_id`, `description`, `address
 (12, 'Sambawan Island Beach', 1, 'Pristine white sand beach with turquoise waters. Known for its stunning sandbar, coral reefs, and camping facilities. Great for island hopping.', 'Sambawan Island, Ormoc City, Leyte', 11.02110000, 124.52340000, '+63-917-345-6789', NULL, NULL, '24 Hours', 'PHP 150', 5.0, NULL, 0, '2025-11-05 05:50:01', '2025-11-05 11:37:18'),
 (13, 'Mahagnao Volcano Natural Park', 5, 'Features twin crater lakes, hot springs, and diverse wildlife. A protected area with hiking trails through pristine forests and geothermal features.', 'Barangay Mahagnao, Ormoc City, Leyte', 11.14440000, 124.75560000, '+63-053-255-4567', NULL, NULL, '7:00 AM - 5:00 PM', 'PHP 30', 5.0, NULL, 0, '2025-11-05 05:59:34', '2025-11-05 11:22:09'),
 (14, 'Luan-Luan Falls', 6, 'Hidden waterfall surrounded by lush forest. Features multiple cascading tiers and natural pools perfect for swimming. Requires short trek through nature trail.', 'Barangay Lake Danao, Ormoc City, Leyte', 11.15670000, 124.77450000, '+63-917-456-7890', NULL, NULL, '6:00 AM - 5:00 PM', 'PHP 20', 5.0, NULL, 0, '2025-11-05 05:59:34', '2025-11-05 11:35:32'),
-(15, 'Bao Hot and Cold Spring', 6, 'Unique natural springs featuring both hot and cold water sources. Locals believe the waters have healing properties. Family-friendly destination.', 'Barangay Bao, Ormoc City, Leyte', 0.00000000, 124.62340000, '+63-917-567-8901', '', '', '6:00 AM - 6:00 PM', 'PHP 30', 5.0, 'destinations/690b31a926ada_1762341289.jpg', 1, '2025-11-05 05:59:34', '2025-11-05 11:17:14'),
+(15, 'Bao Hot and Cold Spring', 6, 'Unique natural springs featuring both hot and cold water sources. Locals believe the waters have healing properties. Family-friendly destination.', 'Barangay Bao, Ormoc City, Leyte', 11.00906039, 124.62329166, '+63-917-567-8901', '', '', '6:00 AM - 6:00 PM', 'PHP 30', 5.0, 'destinations/690b31a926ada_1762341289.jpg', 1, '2025-11-05 05:59:34', '2025-11-10 04:54:32'),
 (37, 'Ormoc City Plaza', 1, '...', '...', 11.00590000, 124.60750000, '+63-053-561-5200', 'ormoccity@gmail.com', '', '24 Hours', 'Free', 5.0, 'destinations/690b35ea7e743_1762342378.jpg', 1, '2025-11-05 06:04:26', '2025-11-05 11:32:58'),
 (38, 'Our Lady of Fatima Shrine', 12, '...', '...', 11.02340000, 124.63120000, '+63-053-561-2345', '', '', '5:00 AM - 7:00 PM', 'Free', 5.0, NULL, 0, '2025-11-05 06:04:26', '2025-11-05 11:21:57'),
 (39, 'Ormoc City Superdome', 1, '...', '...', 11.00890000, 124.60890000, '+63-053-561-6789', '', '', '8:00 AM - 10:00 PM', 'Varies', 5.0, 'destinations/690b36df53283_1762342623.jpg', 1, '2025-11-05 06:04:26', '2025-11-05 11:37:03'),
@@ -175,10 +175,9 @@ CREATE TABLE `reviews` (
 
 INSERT INTO `reviews` (`id`, `destination_id`, `user_id`, `user_name`, `rating`, `comment`, `is_approved`, `created_at`) VALUES
 (11, 8, NULL, 'Maria Santos', 3, 'Lake Danao is absolutely breathtaking! Perfect for a peaceful getaway. The guitar shape is amazing from the viewpoint.', 1, '2024-10-15 02:30:00'),
-(12, 11, 1, 'HinzoHana', 2, 'Wews', 1, '2025-11-05 08:43:11'),
-(13, 15, 1, 'Sample', 5, 'Sample rate', 1, '2025-11-05 08:57:17'),
-(14, 11, 1, 'Hello', 5, 'sample 2 ratings', 1, '2025-11-05 08:58:44'),
-(15, 47, 1, 'Hans', 5, 'Suroyanan', 1, '2025-11-05 10:32:59');
+(12, 11, NULL, 'HinzoHana', 2, 'Wews', 1, '2025-11-05 08:43:11'),
+(13, 15, NULL, 'Sample', 5, 'Sample rate', 1, '2025-11-05 08:57:17'),
+(14, 11, NULL, 'Hello', 5, 'sample 2 ratings', 0, '2025-11-05 08:58:44');
 
 -- --------------------------------------------------------
 
@@ -206,14 +205,9 @@ CREATE TABLE `routes` (
 --
 
 INSERT INTO `routes` (`id`, `route_name`, `origin_id`, `destination_id`, `transport_mode`, `distance_km`, `estimated_time_minutes`, `base_fare`, `fare_per_km`, `description`, `is_active`, `created_at`) VALUES
-(26, 'Ormoc City Terminal to Lake Danao Natural Park', 50, 8, 'jeepney', 0.00, 0, 30.00, 0.00, '0', 1, '2025-11-05 06:19:01'),
-(27, 'Ormoc City Plaza to Tongonan Hot Spring', 37, 9, 'jeepney', 0.00, 0, 30.00, 0.00, '0', 1, '2025-11-05 06:19:01'),
-(28, 'Ormoc Port (near Plaza) to Kasabangan Island', 37, 10, '', 8.50, 30, 100.00, 0.00, 'Boat ride from Ormoc port. Schedule subject to weather conditions.', 1, '2025-11-05 06:19:01'),
-(29, 'Ormoc City Plaza to Altos Peak', 37, 11, 'tricycle', 19.00, 60, 40.00, 0.00, '0', 1, '2025-11-05 06:19:01'),
-(30, 'Ormoc Port to Sambawan Island Beach', 37, 12, '', 12.30, 45, 150.00, 0.00, 'Island hopping boat tour. Registration required at tourism office.', 1, '2025-11-05 06:19:01'),
-(31, 'Lake Danao Natural Park to Tongonan Hot Spring National Park', 8, 9, 'tricycle', 8.70, 25, 30.00, 5.00, 'Short route connecting two natural attractions. Tricycle or motorcycle available.', 1, '2025-11-05 06:19:01'),
-(32, 'Lake Danao Natural Park to Altos Peak', 8, 11, 'walking', 2.10, 90, 0.00, 0.00, 'Hiking trail from Lake Danao Park. Guided trek recommended for safety.', 1, '2025-11-05 06:19:01'),
-(33, 'Tongonan Hot Spring to Mahagnao Volcano Natural Park', 9, 13, 'van', 6.40, 20, 25.00, 4.00, 'Connecting route between geothermal areas. Van or private vehicle.', 1, '2025-11-05 06:19:01');
+(34, 'Robinsons Place to Ormoc City Terminal', 47, 50, 'tricycle', 3.30, 10, 15.00, 0.00, 'Ride from the entrance with the tricycles', 1, '2025-11-09 10:10:22'),
+(35, 'Ormoc City Terminal to Lake Danao Natural Park', 50, 8, 'jeepney', 0.00, NULL, 40.00, 0.00, 'Dont return to 0', 1, '2025-11-09 10:25:52'),
+(36, 'Ormoc City Superdome to Robinsons Place Ormoc', 39, 47, 'taxi', 0.00, 10, 20.00, 1.00, 'Tricycles to The Wan Shop', 1, '2025-11-09 10:35:06');
 
 -- --------------------------------------------------------
 
@@ -226,7 +220,7 @@ CREATE TABLE `users` (
   `username` varchar(50) NOT NULL,
   `password` varchar(255) NOT NULL,
   `email` varchar(100) DEFAULT NULL,
-  `role` enum('admin','user') DEFAULT 'user',
+  `role` enum('ADMIN','USER') DEFAULT 'USER',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -235,8 +229,9 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `username`, `password`, `email`, `role`, `created_at`) VALUES
-(1, 'Admin', '$2y$10$rurfn/OYFQUWIfpyzXxOjOmErlcq/Mw0yVEGD8cTsMAHwpI/yXQGa', 'admin@gmail.com', 'admin', '2025-11-05 00:41:27'),
-(2, 'Hans', '$2y$10$/ADtH0gaUpSr8ox4ihu2vOcwwsZWwLg8I5vNh6JJmlJSGzgTpd7x6', 'hansmichael.2005.gabor@gmail.com', 'user', '2025-11-05 00:31:38');
+(1, 'Admin', '$2y$10$1Rx1ytdO.DDgmbcZ3n0MBet/I3haMLn8IAc6NwUj/szZPuIjW7of.', 'admin@tourism.com', 'ADMIN', '2025-11-10 02:03:29'),
+(2, 'Hans', '$2y$10$/ADtH0gaUpSr8ox4ihu2vOcwwsZWwLg8I5vNh6JJmlJSGzgTpd7x6', 'hansmichael.2005.gabor@gmail.com', 'USER', '2025-11-05 00:31:38'),
+(7, 'Jessha', '$2y$10$UHxAWjNSmRQZDICCSLOE6.HNvR3SDQ9ciHtVfo1PqDAflYHUWgk16', 'jessha@gmail.com', 'USER', '2025-11-22 12:21:44');
 
 -- --------------------------------------------------------
 
@@ -262,8 +257,8 @@ CREATE TABLE `website_feedback` (
 --
 
 INSERT INTO `website_feedback` (`id`, `user_id`, `user_name`, `email`, `rating`, `category`, `feedback`, `is_public`, `is_read`, `created_at`) VALUES
-(2, 1, 'Admin', 'ad@gmail.com', 2, 'features', 'damn', 1, 0, '2025-11-05 08:10:13'),
-(3, 1, 'Admin', 'ad@gmail.com', 3, 'features', 'again', 1, 1, '2025-11-05 08:10:31');
+(4, 1, 'Admin', 'admin@tourism.com', 5, 'general', 'Im very satisfied', 1, 0, '2025-11-10 04:48:43'),
+(7, NULL, 'Admin', 'hansmichael.gabor@evsu.edu.ph', 1, 'general', 'Error in recent feedback from visitors and map not showing directions', 1, 1, '2025-11-12 00:07:05');
 
 -- --------------------------------------------------------
 
@@ -357,25 +352,25 @@ ALTER TABLE `destination_images`
 -- AUTO_INCREMENT for table `reviews`
 --
 ALTER TABLE `reviews`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
 
 --
 -- AUTO_INCREMENT for table `routes`
 --
 ALTER TABLE `routes`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT for table `website_feedback`
 --
 ALTER TABLE `website_feedback`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- Constraints for dumped tables
