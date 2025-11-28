@@ -22,7 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['username'] = $user['username'];
                 $_SESSION['role'] = $user['role'];
                 
-                if ($user['role'] === 'admin') {
+                if ($user['role'] === 'ADMIN') {
                     header('Location: admin/dashboard.php');
                 } else {
                     header('Location: index.php');
