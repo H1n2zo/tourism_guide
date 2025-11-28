@@ -42,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $password = password_hash($_POST['reg_password'], PASSWORD_DEFAULT);
         
         $conn = getDBConnection();
-        $stmt = $conn->prepare("INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, 'user')");
+        $stmt = $conn->prepare("INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, 'USER')");
         $stmt->bind_param("sss", $username, $email, $password);
         
         if ($stmt->execute()) {
